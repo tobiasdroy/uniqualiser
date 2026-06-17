@@ -29,21 +29,37 @@ Font: `'Helvetica Neue', Helvetica, Arial, sans-serif`, weight 500 everywhere.
 
 ```css
 /* Light */
---bg-primary: #ffffff
---bg-secondary: #f5f5f7
---bg-elevated: #ffffff
+--bg-primary:  #ffffff        /* thumb borders, input backgrounds */
+--bg-secondary: #f5f5f7       /* page background (grey) + internal card surfaces */
+--bg-elevated: #f5f5f7        /* band rows, drop zones, slider tracks (grey on white cards) */
+--page-bg:     #f5f5f7        /* html/body background — grey so white cards lift off the page */
+--card-bg:     linear-gradient(150deg, #ffffff 0%, #fdfdfd 100%)  /* white cards */
 --text-primary: rgba(0,0,0,0.88)
 --text-secondary: rgba(0,0,0,0.58)   /* ≥4.5:1 on white — WCAG AA */
 --accent / --eq-curve: #0062cc       /* ≥4.5:1 on white — WCAG AA */
 
 /* Dark */
---bg-primary: #1c1c1e
+--bg-primary:  #1c1c1e
 --bg-secondary: #2c2c2e
 --bg-elevated: #3a3a3c
+--page-bg:     #1c1c1e        /* darkest — cards lift above it */
+--card-bg:     linear-gradient(150deg, #3a3a3c 0%, #323234 100%)  /* lighter than page */
 --text-primary: rgba(255,255,255,0.92)
 --text-secondary: rgba(255,255,255,0.55)  /* ≥4.5:1 on #2c2c2e — WCAG AA */
 --accent / --eq-curve: #5aabff            /* ≥4.5:1 on all dark surfaces */
 ```
+
+**Shadows** — three-layer diffuse shadow for depth; dark mode uses a heavier version:
+```css
+/* Light */
+--shadow: 0 2px 4px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06), 0 24px 64px rgba(0,0,0,0.05);
+/* Dark */
+--shadow: 0 2px 8px rgba(0,0,0,0.3), 0 12px 40px rgba(0,0,0,0.25);
+```
+
+**Cards** — `border-radius: 20px`; `transition: transform + box-shadow 0.22s`; hover lifts `translateY(-3px)` with a deeper shadow. Card section titles are `15px` uppercase, `--text-primary` (not secondary).
+
+The page background has a subtle radial blue accent at the top (`radial-gradient` on `html/body background-image`).
 
 Cards are differentiated by background colour only — no border outlines.
 

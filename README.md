@@ -26,7 +26,7 @@ A safety notice is shown on first use with instructions to lower your volume bef
 - [Vite](https://vitejs.dev) + [React](https://react.dev) + TypeScript
 - Web Audio API (no audio libraries)
 - React Router
-- CSS Modules
+- CSS Modules + CSS custom properties (design tokens, dark/light mode)
 - [Radix UI](https://www.radix-ui.com) — accessible slider and tooltip primitives
 - [Framer Motion](https://www.framer.com/motion/) — layout and entrance animations
 - [Lucide React](https://lucide.dev) — icon set

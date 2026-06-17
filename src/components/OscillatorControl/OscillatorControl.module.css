@@ -1,8 +1,17 @@
 .container {
-  background: var(--bg-secondary);
-  border-radius: 12px;
+  background: var(--card-bg);
+  border-radius: 20px;
   box-shadow: var(--shadow);
   padding: 20px 24px;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.container:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.06),
+    0 16px 40px rgba(0, 0, 0, 0.09),
+    0 32px 80px rgba(0, 0, 0, 0.07);
 }
 
 .header {
@@ -13,9 +22,9 @@
 }
 
 .title {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: var(--font-weight-medium);
-  color: var(--text-secondary);
+  color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
