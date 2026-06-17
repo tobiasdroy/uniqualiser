@@ -1,7 +1,7 @@
 const MIN_FREQ = 20;
 const MAX_FREQ = 20000;
-const MIN_DB = -24;
-const MAX_DB = 24;
+const MIN_DB = -12;
+const MAX_DB = 12;
 const CURVE_POINTS = 512;
 
 export const FREQ_ARRAY: Float32Array = (() => {
@@ -78,4 +78,4 @@ export function formatFrequency(freq: number): string {
 }
 
 export const GRID_FREQUENCIES = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
-export const GRID_DB = [-18, -12, -6, 0, 6, 12, 18];
+export const GRID_DB = [-12, -6, 0, 6, 12];
