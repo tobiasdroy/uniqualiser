@@ -6,10 +6,11 @@ import { OscillatorControl } from './components/OscillatorControl/OscillatorCont
 import { AudioFilePlayer } from './components/AudioFilePlayer/AudioFilePlayer';
 import { ProfileManager } from './components/ProfileManager/ProfileManager';
 import { Wizard } from './components/Wizard/Wizard';
+import { useTheme } from './hooks/useTheme';
 import './styles/globals.css';
 import styles from './App.module.css';
 
-function Header() {
+function Header({ onToggleTheme, theme }: { onToggleTheme: () => void; theme: string }) {
   const location = useLocation();
   const isWizard = location.pathname === '/wizard';
 
@@ -21,7 +22,12 @@ function Header() {
           Wizard
         </Link>
       </nav>
-      <ProfileManager />
+      <div className={styles.headerRight}>
+        <button className={styles.themeToggle} onClick={onToggleTheme} aria-label="Toggle theme">
+          {theme === 'light' ? 'Dark' : 'Light'}
+        </button>
+        <ProfileManager />
+      </div>
     </header>
   );
 }
@@ -40,11 +46,13 @@ function MainLayout() {
 }
 
 export default function App() {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <BrowserRouter>
       <AppProvider>
         <div className={styles.app}>
-          <Header />
+          <Header onToggleTheme={toggleTheme} theme={theme} />
           <Routes>
             <Route path="/" element={<MainLayout />} />
             <Route path="/wizard" element={<Wizard />} />
