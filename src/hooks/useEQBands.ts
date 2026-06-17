@@ -13,7 +13,8 @@ type Action =
   | { type: 'REMOVE_BAND'; id: string }
   | { type: 'UPDATE_BAND'; id: string; patch: Partial<EQBand> }
   | { type: 'LOAD_PROFILE'; profile: EQProfile }
-  | { type: 'SET_PREAMP'; gain: number };
+  | { type: 'SET_PREAMP'; gain: number }
+  | { type: 'RESET_GAINS' };
 
 function defaultBand(overrides?: Partial<EQBand>): EQBand {
   return {
@@ -50,6 +51,8 @@ function reducer(state: State, action: Action): State {
       return { bands: action.profile.bands, preampGain: action.profile.preampGain };
     case 'SET_PREAMP':
       return { ...state, preampGain: action.gain };
+    case 'RESET_GAINS':
+      return { ...state, bands: state.bands.map((b) => ({ ...b, gain: 0 })) };
   }
 }
 
@@ -126,6 +129,13 @@ export function useEQBands(engineRef: RefObject<AudioEngine | null>) {
     [engineRef, state.bands.length],
   );
 
+  const resetGains = useCallback(() => {
+    state.bands.forEach((_, i) => {
+      engineRef.current?.setBandGain(i, 0);
+    });
+    dispatch({ type: 'RESET_GAINS' });
+  }, [engineRef, state.bands]);
+
   const setPreampGain = useCallback(
     (gain: number) => {
       engineRef.current?.setMasterGain(Math.pow(10, gain / 20));
@@ -140,6 +150,7 @@ export function useEQBands(engineRef: RefObject<AudioEngine | null>) {
     addBand,
     removeBand,
     updateBand,
+    resetGains,
     loadProfile,
     setPreampGain,
   };

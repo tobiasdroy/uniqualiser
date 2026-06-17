@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import type { EQBand, FilterType } from '../../types';
 import styles from './EQBandControl.module.css';
@@ -146,20 +146,55 @@ function BandRow({ band, index, showRemove }: { band: EQBand; index: number; sho
 }
 
 export function EQBandControl() {
-  const { bands, addBand } = useAppContext();
+  const { bands, addBand, resetGains, eqBypassed, setEQBypassed } = useAppContext();
+  const [resetPending, setResetPending] = useState(false);
+
+  const handleResetConfirm = useCallback(() => {
+    resetGains();
+    setResetPending(false);
+  }, [resetGains]);
 
   return (
     <section className={styles.container} aria-label="Parametric EQ bands">
       <div className={styles.header}>
         <span className={styles.title} id="eq-bands-heading">EQ Bands</span>
-        <button
-          className={styles.addBtn}
-          onClick={addBand}
-          disabled={bands.length >= 10}
-          aria-label={`Add EQ band (${bands.length} of 10 in use)`}
-        >
-          + Add Band
-        </button>
+        <div className={styles.headerActions}>
+          {resetPending ? (
+            <>
+              <span className={styles.confirmText}>Reset all gains?</span>
+              <button className={styles.confirmBtn} onClick={handleResetConfirm}>
+                Confirm
+              </button>
+              <button className={styles.cancelBtn} onClick={() => setResetPending(false)}>
+                Cancel
+              </button>
+            </>
+          ) : (
+            <button
+              className={styles.resetBtn}
+              onClick={() => setResetPending(true)}
+              aria-label="Reset all band gains to 0 dB"
+            >
+              Reset
+            </button>
+          )}
+          <button
+            className={`${styles.abBtn} ${eqBypassed ? styles.abActive : ''}`}
+            onClick={() => setEQBypassed(!eqBypassed)}
+            aria-pressed={eqBypassed}
+            aria-label={eqBypassed ? 'A/B: EQ bypassed — click to restore' : 'A/B: EQ active — click to bypass'}
+          >
+            A/B
+          </button>
+          <button
+            className={styles.addBtn}
+            onClick={addBand}
+            disabled={bands.length >= 10}
+            aria-label={`Add EQ band (${bands.length} of 10 in use)`}
+          >
+            + Add Band
+          </button>
+        </div>
       </div>
       <div className={styles.bands} role="list" aria-labelledby="eq-bands-heading">
         {bands.map((band, i) => (

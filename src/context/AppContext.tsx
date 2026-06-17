@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import type { RefObject } from 'react';
 import type { EQBand, EQProfile } from '../types';
 import type { AudioEngine } from '../audio/AudioEngine';
@@ -15,16 +15,28 @@ interface AppContextValue {
   addBand: () => void;
   removeBand: (id: string) => void;
   updateBand: (id: string, patch: Partial<EQBand>) => void;
+  resetGains: () => void;
   loadProfile: (profile: EQProfile) => void;
   setPreampGain: (gain: number) => void;
+  eqBypassed: boolean;
+  setEQBypassed: (bypassed: boolean) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children, safetyAccepted }: { children: ReactNode; safetyAccepted: boolean }) {
   const { engineRef, isReady, initEngine, panic } = useAudioEngine(safetyAccepted);
-  const { bands, preampGain, addBand, removeBand, updateBand, loadProfile, setPreampGain } =
+  const { bands, preampGain, addBand, removeBand, updateBand, resetGains, loadProfile, setPreampGain } =
     useEQBands(engineRef);
+  const [eqBypassed, setEQBypassedState] = useState(false);
+
+  const setEQBypassed = useCallback(
+    (bypassed: boolean) => {
+      engineRef.current?.setEQBypassed(bypassed);
+      setEQBypassedState(bypassed);
+    },
+    [engineRef],
+  );
 
   return (
     <AppContext.Provider
@@ -38,8 +50,11 @@ export function AppProvider({ children, safetyAccepted }: { children: ReactNode;
         addBand,
         removeBand,
         updateBand,
+        resetGains,
         loadProfile,
         setPreampGain,
+        eqBypassed,
+        setEQBypassed,
       }}
     >
       {children}

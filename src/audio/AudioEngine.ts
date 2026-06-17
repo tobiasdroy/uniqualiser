@@ -19,6 +19,7 @@ export class AudioEngine {
   private currentFileSource: AudioBufferSourceNode | null = null;
   private audioBuffer: AudioBuffer | null = null;
   private fileEQEnabled = true;
+  private eqBypassed = false;
   private sweepTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   init(): void {
@@ -96,6 +97,12 @@ export class AudioEngine {
       node.disconnect();
     }
 
+    if (this.eqBypassed) {
+      this.oscGainNode.connect(this.analyserNode);
+      this.fileGainNode.connect(this.analyserNode);
+      return;
+    }
+
     for (let i = 0; i < this.filterNodes.length - 1; i++) {
       this.filterNodes[i].connect(this.filterNodes[i + 1]);
     }
@@ -111,6 +118,11 @@ export class AudioEngine {
     } else {
       this.fileGainNode.connect(this.analyserNode);
     }
+  }
+
+  setEQBypassed(bypassed: boolean): void {
+    this.eqBypassed = bypassed;
+    this.rebuildChain();
   }
 
   // ── Oscillator ──────────────────────────────────────────────────────────────

@@ -87,3 +87,13 @@
   stroke-width: 2;
   pointer-events: none;
 }
+
+/* A/B bypass: dim curves and handles to show EQ is inactive */
+.bypassed .bandCurve,
+.bypassed .curveGlow,
+.bypassed .curve,
+.bypassed .handle,
+.bypassed .handleHit {
+  opacity: 0.2;
+  pointer-events: none;
+}

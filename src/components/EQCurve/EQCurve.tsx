@@ -21,7 +21,7 @@ interface DragState {
 }
 
 export function EQCurve() {
-  const { bands, updateBand, engineRef, isEngineReady } = useAppContext();
+  const { bands, updateBand, engineRef, isEngineReady, eqBypassed } = useAppContext();
   const svgRef = useRef<SVGSVGElement>(null);
   const [width, setWidth] = useState(800);
   const [combinedPath, setCombinedPath] = useState('');
@@ -101,7 +101,7 @@ export function EQCurve() {
   );
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${eqBypassed ? styles.bypassed : ''}`}>
       <svg
         ref={svgRef}
         className={styles.svg}

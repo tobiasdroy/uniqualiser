@@ -20,6 +20,12 @@
   letter-spacing: 0.06em;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .addBtn {
   background: var(--bg-elevated);
   border: 1px solid var(--border);
@@ -40,6 +46,89 @@
 .addBtn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
+}
+
+.resetBtn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.resetBtn:hover {
+  border-color: #ff453a;
+  color: #ff453a;
+  background: rgba(255, 69, 58, 0.08);
+}
+
+.confirmText {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.confirmBtn {
+  background: #ff453a;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.confirmBtn:hover {
+  opacity: 0.85;
+}
+
+.cancelBtn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.cancelBtn:hover {
+  color: var(--text-primary);
+}
+
+.abBtn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.04em;
+}
+
+.abBtn:hover {
+  color: var(--text-primary);
+}
+
+.abBtn.abActive {
+  background: var(--bg-elevated);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .bands {
