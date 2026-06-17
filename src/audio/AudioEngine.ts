@@ -14,6 +14,7 @@ export class AudioEngine {
   private safetyLimiterNode: GainNode | null = null;
   private compressorNode: DynamicsCompressorNode | null = null;
   private analyserNode: AnalyserNode | null = null;
+  private eqMakeupGainNode: GainNode | null = null;
   private filterNodes: BiquadFilterNode[] = [];
   private currentOscillator: OscillatorNode | null = null;
   private currentFileSource: AudioBufferSourceNode | null = null;
@@ -33,6 +34,8 @@ export class AudioEngine {
     this.masterGainNode = this.ctx.createGain();
     this.analyserNode = this.ctx.createAnalyser();
     this.analyserNode.fftSize = 2048;
+
+    this.eqMakeupGainNode = this.ctx.createGain();
 
     // Hard output ceiling at -1 dBFS before the compressor
     this.safetyLimiterNode = this.ctx.createGain();
@@ -84,39 +87,45 @@ export class AudioEngine {
     return defaults[index] ?? 1000;
   }
 
-  private getChainEntry(): AudioNode | null {
+  private getChainEntry(): AudioNode {
     if (this.filterNodes.length > 0) return this.filterNodes[0];
-    return this.analyserNode;
+    // No filters: sources enter directly into the makeup gain node
+    return this.eqMakeupGainNode ?? this.analyserNode!;
   }
 
   rebuildChain(): void {
-    if (!this.ctx || !this.oscGainNode || !this.fileGainNode || !this.analyserNode) return;
+    if (!this.ctx || !this.oscGainNode || !this.fileGainNode || !this.analyserNode || !this.eqMakeupGainNode) return;
 
     this.oscGainNode.disconnect();
     this.fileGainNode.disconnect();
+    this.eqMakeupGainNode.disconnect();
     for (const node of this.filterNodes) {
       node.disconnect();
     }
 
     if (this.eqBypassed) {
+      // Bypass skips both filters and makeup gain — sources go straight to analyser
       this.oscGainNode.connect(this.analyserNode);
       this.fileGainNode.connect(this.analyserNode);
       return;
     }
 
+    // EQ path: filters → makeupGain → analyser
+    this.eqMakeupGainNode.connect(this.analyserNode);
     for (let i = 0; i < this.filterNodes.length - 1; i++) {
       this.filterNodes[i].connect(this.filterNodes[i + 1]);
     }
     if (this.filterNodes.length > 0) {
-      this.filterNodes[this.filterNodes.length - 1].connect(this.analyserNode);
+      this.filterNodes[this.filterNodes.length - 1].connect(this.eqMakeupGainNode);
     }
 
-    const entry = this.getChainEntry()!;
+    const entry = this.getChainEntry();
     this.oscGainNode.connect(entry);
 
     if (this.fileEQEnabled) {
       this.fileGainNode.connect(entry);
     } else {
+      // File EQ disabled: file bypasses filters and makeup gain
       this.fileGainNode.connect(this.analyserNode);
     }
   }
@@ -124,6 +133,10 @@ export class AudioEngine {
   setEQBypassed(bypassed: boolean): void {
     this.eqBypassed = bypassed;
     this.rebuildChain();
+  }
+
+  setEQMakeupGain(gain: number): void {
+    if (this.eqMakeupGainNode) this.eqMakeupGainNode.gain.value = gain;
   }
 
   // ── Oscillator ──────────────────────────────────────────────────────────────
@@ -305,5 +318,6 @@ export class AudioEngine {
     this.ctx = null;
     this.filterNodes = [];
     this.audioBuffer = null;
+    this.eqMakeupGainNode = null;
   }
 }

@@ -72,6 +72,25 @@ function magnitudesToPath(magnitudes: Float32Array, width: number, height: numbe
   return d;
 }
 
+// Returns the mean dB of the combined EQ response across the log-frequency axis.
+// Positive = net boost, negative = net cut. Average is log-frequency weighted,
+// which gives perceptual weighting (biased toward the 1–4 kHz sensitivity peak).
+export function computeAverageGainDb(filterNodes: BiquadFilterNode[]): number {
+  if (filterNodes.length === 0) return 0;
+  const mag = new Float32Array(CURVE_POINTS);
+  const phase = new Float32Array(CURVE_POINTS);
+  const combined = new Float32Array(CURVE_POINTS).fill(1.0);
+  for (const node of filterNodes) {
+    node.getFrequencyResponse(FREQ_ARRAY, mag, phase);
+    for (let i = 0; i < CURVE_POINTS; i++) combined[i] *= mag[i];
+  }
+  let sum = 0;
+  for (let i = 0; i < CURVE_POINTS; i++) {
+    sum += 20 * Math.log10(Math.max(combined[i], 1e-10));
+  }
+  return sum / CURVE_POINTS;
+}
+
 export function formatFrequency(freq: number): string {
   if (freq >= 1000) return `${(freq / 1000).toFixed(freq % 1000 === 0 ? 0 : 1)}k`;
   return `${Math.round(freq)}`;

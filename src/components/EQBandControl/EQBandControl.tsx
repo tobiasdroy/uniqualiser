@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAppContext } from '../../context/AppContext';
+import { computeAverageGainDb } from '../../audio/frequencyMath';
 import type { EQBand, FilterType } from '../../types';
 import styles from './EQBandControl.module.css';
 
@@ -146,13 +147,26 @@ function BandRow({ band, index, showRemove }: { band: EQBand; index: number; sho
 }
 
 export function EQBandControl() {
-  const { bands, addBand, resetGains, eqBypassed, setEQBypassed, preampGain, setPreampGain } = useAppContext();
+  const { bands, addBand, resetGains, eqBypassed, setEQBypassed, preampGain, setPreampGain, engineRef, isEngineReady } = useAppContext();
   const [resetPending, setResetPending] = useState(false);
+  const [levelMatch, setLevelMatch] = useState(false);
 
   const handleResetConfirm = useCallback(() => {
     resetGains();
     setResetPending(false);
   }, [resetGains]);
+
+  // Recompute and apply makeup gain whenever bands or levelMatch changes
+  useEffect(() => {
+    if (!isEngineReady || !engineRef.current) return;
+    if (!levelMatch) {
+      engineRef.current.setEQMakeupGain(1);
+      return;
+    }
+    const filterNodes = engineRef.current.getFilterNodes();
+    const avgDb = computeAverageGainDb(filterNodes);
+    engineRef.current.setEQMakeupGain(Math.pow(10, -avgDb / 20));
+  }, [bands, levelMatch, isEngineReady, engineRef]);
 
   return (
     <section className={styles.container} aria-label="Parametric EQ bands">
@@ -178,6 +192,14 @@ export function EQBandControl() {
               Reset
             </button>
           )}
+          <button
+            className={`${styles.levelBtn} ${levelMatch ? styles.levelActive : ''}`}
+            onClick={() => setLevelMatch((v) => !v)}
+            aria-pressed={levelMatch}
+            aria-label={levelMatch ? 'Level match on — EQ path compensated for equal loudness' : 'Level match off — click to compensate EQ gain for equal A/B loudness'}
+          >
+            Level
+          </button>
           <button
             className={`${styles.abBtn} ${eqBypassed ? styles.abActive : ''}`}
             onClick={() => setEQBypassed(!eqBypassed)}

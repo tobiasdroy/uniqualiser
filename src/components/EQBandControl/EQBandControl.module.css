@@ -131,6 +131,29 @@
   color: var(--accent);
 }
 
+.levelBtn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.levelBtn:hover {
+  color: var(--text-primary);
+}
+
+.levelBtn.levelActive {
+  background: var(--bg-elevated);
+  border-color: #30d158;
+  color: #30d158;
+}
+
 .preampRow {
   display: flex;
   align-items: center;
