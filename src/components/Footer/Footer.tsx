@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SafetyModal } from '../SafetyModal/SafetyModal';
 import styles from './Footer.module.css';
 
 function PrivacyModal({ onClose }: { onClose: () => void }) {
@@ -65,6 +66,7 @@ function PrivacyModal({ onClose }: { onClose: () => void }) {
 
 export function Footer() {
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showSafety, setShowSafety] = useState(false);
 
   return (
     <>
@@ -73,12 +75,18 @@ export function Footer() {
           All audio processing happens locally on your device. No data is uploaded or shared.
         </p>
         <div className={styles.links}>
+          <button className={styles.footerLink} onClick={() => setShowSafety(true)}>
+            Safety Notice
+          </button>
           <button className={styles.footerLink} onClick={() => setShowPrivacy(true)}>
             Privacy &amp; Compliance
           </button>
         </div>
       </footer>
 
+      {showSafety && (
+        <SafetyModal mode="review" onClose={() => setShowSafety(false)} />
+      )}
       {showPrivacy && <PrivacyModal onClose={() => setShowPrivacy(false)} />}
     </>
   );

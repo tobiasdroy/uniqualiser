@@ -2,11 +2,14 @@ import { useState, useRef, useEffect } from 'react';
 import styles from './SafetyModal.module.css';
 
 interface Props {
-  onAccept: () => void;
+  onAccept?: () => void;
+  onClose?: () => void;
+  mode?: 'gate' | 'review';
 }
 
-export function SafetyModal({ onAccept }: Props) {
+export function SafetyModal({ onAccept, onClose, mode = 'gate' }: Props) {
   const [checked, setChecked] = useState(false);
+  const isReview = mode === 'review';
   const modalRef = useRef<HTMLDivElement>(null);
   const headingId = 'safety-modal-heading';
 
@@ -104,27 +107,34 @@ export function SafetyModal({ onAccept }: Props) {
         </div>
 
         <div className={styles.footer}>
-          <label className={styles.checkLabel}>
-            <input
-              type="checkbox"
-              checked={checked}
-              onChange={(e) => setChecked(e.target.checked)}
-              aria-label="I have read all warnings and agree to use this tool at my own risk"
-            />
-            <span>
-              I have read and understood the warnings above and agree to use this tool
-              entirely at my own risk
-            </span>
-          </label>
-
-          <button
-            className={styles.acceptBtn}
-            onClick={onAccept}
-            disabled={!checked}
-            aria-disabled={!checked}
-          >
-            Accept and continue
-          </button>
+          {isReview ? (
+            <button className={styles.acceptBtn} onClick={onClose} aria-label="Close safety notice">
+              Close
+            </button>
+          ) : (
+            <>
+              <label className={styles.checkLabel}>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(e) => setChecked(e.target.checked)}
+                  aria-label="I have read all warnings and agree to use this tool at my own risk"
+                />
+                <span>
+                  I have read and understood the warnings above and agree to use this tool
+                  entirely at my own risk
+                </span>
+              </label>
+              <button
+                className={styles.acceptBtn}
+                onClick={onAccept}
+                disabled={!checked}
+                aria-disabled={!checked}
+              >
+                Accept and continue
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
