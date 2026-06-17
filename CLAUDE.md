@@ -142,7 +142,7 @@ AudioBufferSourceNode            │
 3. **BiquadFilterNode setters use direct `.value =` assignment**, not `setValueAtTime`, so `getFrequencyResponse()` sees changes immediately (used by EQCurve to draw the live curve).
 4. **`rebuildChain()` must be called after adding/removing bands, and checks both `eqBypassed` and `fileEQEnabled` flags.** It disconnects all nodes between `oscGainNode`/`fileGainNode` and `analyserNode`, then reconnects in the correct topology.
 5. **Two independent bypass flags:**
-   - `fileEQEnabled` (per `AudioFilePlayer`) — only routes the file player signal around the EQ filters directly to `analyserNode`. The oscillator still goes through filters. Acceptable click artefacts.
+   - `fileEQEnabled` — internal engine flag (always `true` now; the per-file toggle was removed from the UI since A/B + Level Match is strictly better). The method `setFileEQEnabled` still exists on `AudioEngine` but is not called from any component.
    - `eqBypassed` (A/B toggle in `EQBandControl`) — routes both sources through `bypassTrimNode` → `analyserNode`, skipping all filters. `bypassTrimNode.gain` is 1 normally; when Level Match is on it's set to `10^(avgEqDb/20)` to attenuate the flat signal to match the EQ path's average level. Exposed via `AppContext`. When active the EQ curve dims to 20% opacity.
 6. **`panic()`** sets `masterGainNode.gain` to 0 immediately and stops all sources. `startOscillator()` / `startFile()` restore `masterGainNode.gain` to 1 before playing in case `panic()` was previously called.
 

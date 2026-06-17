@@ -12,7 +12,7 @@ All processing is done client-side via the Web Audio API — no server, no data 
 - **A/B bypass** — toggle the entire EQ in and out with one button to compare your correction against the flat signal
 - **Level Match** — compensates the EQ path so A/B comparison is at equal perceived loudness (eliminates the "louder sounds better" bias)
 - **Reset** — zero all band gains in one step (with confirmation)
-- **Audio file player** — upload any audio file and toggle your EQ profile on/off to compare
+- **Audio file player** — upload any audio file and play it through your EQ profile
 - **Import / Export** — standard APO Equalizer `.txt` format, compatible with most system-level EQ tools
 - **Light and dark mode** — system-agnostic toggle, preference saved across sessions
 - **Wizard** *(coming soon)* — a guided step-by-step flow for beginners
@@ -47,7 +47,7 @@ Open [http://localhost:5173](http://localhost:5173).
 6. Enable **Level Match** before using A/B — it automatically compensates the EQ path so both states are at equal perceived loudness, removing the "louder sounds better" bias
 7. Use **A/B** to toggle the EQ in and out and confirm the correction is working
 8. Set **Preamp** to a negative value if your corrections involve significant boosts — this prevents clipping
-9. Upload an audio file and toggle **EQ On / Bypassed** on the file player to hear the difference on real material
+9. Upload an audio file and use **A/B** (with Level Match on) to hear the difference on real material
 10. **Export Profile** to save your settings as a `.txt` file
 
 ## APO format
