@@ -113,19 +113,27 @@ export interface EQProfile {
 
 ### Node graph
 
+Normal (EQ active):
 ```
 OscillatorNode  → oscGainNode  ─┐
                                  ├→ filterNode[0] → ... → filterNode[N] → analyserNode
-AudioBufferSourceNode            │                                              │
-  via fileGainNode  ─────────────┘  (or fileGainNode → analyserNode if bypass) │
-                                                                                ↓
-                                                                        masterGainNode
-                                                                               ↓
-                                                                      safetyLimiterNode (gain = 0.89, ≈ −1 dBFS)
-                                                                               ↓
-                                                                       compressorNode (threshold −1 dBFS, ratio 20:1)
-                                                                               ↓
-                                                                          destination
+AudioBufferSourceNode            │   (or fileGainNode → analyserNode when fileEQEnabled=false)   │
+  via fileGainNode  ─────────────┘                                                               ↓
+                                                                                         masterGainNode
+                                                                                                ↓
+                                                                                   safetyLimiterNode (gain = 0.89, ≈ −1 dBFS)
+                                                                                                ↓
+                                                                                    compressorNode (threshold −1 dBFS, ratio 20:1)
+                                                                                                ↓
+                                                                                           destination
+```
+
+A/B bypassed (`eqBypassed = true`):
+```
+OscillatorNode  → oscGainNode  ─┐
+                                 ├→ analyserNode → masterGainNode → ... → destination
+AudioBufferSourceNode            │
+  via fileGainNode  ─────────────┘
 ```
 
 ### Key rules
@@ -133,8 +141,10 @@ AudioBufferSourceNode            │                                            
 1. **AudioContext on user gesture only.** `init()` is called inside `useAudioEngine` when `enabled` flips true (user accepted safety modal). Never construct on mount.
 2. **OscillatorNode and AudioBufferSourceNode are one-shot.** Create a fresh node on every play call.
 3. **BiquadFilterNode setters use direct `.value =` assignment**, not `setValueAtTime`, so `getFrequencyResponse()` sees changes immediately (used by EQCurve to draw the live curve).
-4. **`rebuildChain()` must be called after adding/removing bands.** It disconnects all nodes between `oscGainNode`/`fileGainNode` and `analyserNode`, then reconnects in order.
-5. **EQ bypass:** `fileGainNode` disconnects from `filterNode[0]` and connects directly to `analyserNode`. Click artefacts are acceptable for a comparison toggle.
+4. **`rebuildChain()` must be called after adding/removing bands, and checks both `eqBypassed` and `fileEQEnabled` flags.** It disconnects all nodes between `oscGainNode`/`fileGainNode` and `analyserNode`, then reconnects in the correct topology.
+5. **Two independent bypass flags:**
+   - `fileEQEnabled` (per `AudioFilePlayer`) — only routes the file player signal around the EQ. The oscillator still goes through filters. Acceptable click artefacts.
+   - `eqBypassed` (A/B toggle in `EQBandControl`) — routes both sources directly to `analyserNode`, skipping all filter nodes entirely. Exposed via `AppContext` as `eqBypassed` / `setEQBypassed`. When active the EQ curve dims to 20% opacity.
 6. **`panic()`** sets `masterGainNode.gain` to 0 immediately and stops all sources. `startOscillator()` / `startFile()` restore `masterGainNode.gain` to 1 before playing in case `panic()` was previously called.
 
 ### FilterType → BiquadFilterType
@@ -154,6 +164,7 @@ AudioBufferSourceNode            │                                            
 | `EQBand[]` + `preampGain` | `AppContext` via `useEQBands` reducer |
 | `AudioEngine` instance | `useRef` in `useAudioEngine` (NOT React state) |
 | `isEngineReady` | `AppContext` |
+| `eqBypassed` | `AppContext` (drives A/B toggle + EQ curve dimming) |
 | Oscillator `isPlaying`, `currentFreq` | `OscillatorControl` local state |
 | Sweep `isSweeping`, `progress`, `currentFreq` | `useSweep` |
 | File `isPlaying`, `eqEnabled`, `fileName` | `AudioFilePlayer` local state |
@@ -171,6 +182,7 @@ AudioBufferSourceNode            │                                            
 - Draggable handles: `setPointerCapture` for reliable drag-outside. Horizontal = frequency, vertical = gain.
 - Keyboard: arrow keys on focused handles adjust frequency (×1.05) and gain (±0.5 dB). Shift multiplies step.
 - `isEngineReady` is in the `useEffect` dependency array — without it the curve won't redraw after the engine initialises.
+- When `eqBypassed` is true the container gets `.bypassed` CSS class, which reduces curve/handle opacity to 0.2 and sets `pointer-events: none` on handles (drag is disabled during bypass).
 
 ---
 
@@ -179,6 +191,12 @@ AudioBufferSourceNode            │                                            
 `NumberInput` is a local wrapper around `<input type="number">` that holds string state while the field is focused to prevent snap-back on intermediate values (empty field, partial numbers, leading minus). It commits and clamps on blur, and only syncs from the external `value` prop when not focused.
 
 Bands: min 1, max 10. Add/remove buttons. Enable toggle per band (button labelled with band number, `aria-pressed`).
+
+### Header action buttons (right side of EQ Bands header)
+
+- **Reset** — zeroes all band gains (frequencies, Q, and types are unchanged). Uses an inline two-step confirm: clicking "Reset" replaces the button in-place with "Reset all gains?" + Confirm + Cancel. No browser dialog. State is local to `EQBandControl` (`resetPending` boolean). `resetGains` lives in `useEQBands` as a `RESET_GAINS` reducer action.
+- **A/B** — toggles `eqBypassed` in `AppContext`. When active (highlighted in accent colour, `aria-pressed=true`) the entire EQ filter chain is bypassed in the audio graph and the EQ curve dims.
+- **+ Add Band** — adds a new band (disabled at 10).
 
 ---
 
