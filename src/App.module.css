@@ -79,6 +79,9 @@
 }
 
 .themeToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -108,11 +111,6 @@
   margin: 0 auto;
 }
 
-.row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
 
 @media (max-width: 760px) {
   .row {

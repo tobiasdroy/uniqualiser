@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import * as TooltipPrimitive from '@radix-ui/react-tooltip';
+import { motion, AnimatePresence } from 'framer-motion';
+import { RotateCcw, Plus } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { computeAverageGainDb } from '../../audio/frequencyMath';
 import type { EQBand, FilterType } from '../../types';
@@ -6,6 +9,20 @@ import styles from './EQBandControl.module.css';
 
 const FILTER_LABELS: Record<FilterType, string> = { PK: 'Peak', LSC: 'Low Shelf', HSC: 'High Shelf' };
 const FILTER_TYPES: FilterType[] = ['PK', 'LSC', 'HSC'];
+
+function Tip({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <TooltipPrimitive.Root>
+      <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>
+      <TooltipPrimitive.Portal>
+        <TooltipPrimitive.Content className={styles.tooltip} sideOffset={6}>
+          {label}
+          <TooltipPrimitive.Arrow className={styles.tooltipArrow} />
+        </TooltipPrimitive.Content>
+      </TooltipPrimitive.Portal>
+    </TooltipPrimitive.Root>
+  );
+}
 
 // Holds local string state while the user is typing so intermediate values
 // (empty field, partial numbers, leading minus) don't snap back. Commits and
@@ -167,8 +184,6 @@ export function EQBandControl() {
     }
     const filterNodes = engineRef.current.getFilterNodes();
     const avgDb = computeAverageGainDb(filterNodes);
-    // avgDb is negative for cuts, positive for boosts.
-    // Apply the same gain to bypass so it matches the EQ path's average level.
     engineRef.current.setBypassTrim(Math.pow(10, avgDb / 20));
   }, [bands, levelMatch, isEngineReady, engineRef]);
 
@@ -188,40 +203,51 @@ export function EQBandControl() {
               </button>
             </>
           ) : (
-            <button
-              className={styles.resetBtn}
-              onClick={() => setResetPending(true)}
-              aria-label="Reset all band gains to 0 dB"
-            >
-              Reset
-            </button>
+            <Tip label="Zero all band gains">
+              <button
+                className={styles.resetBtn}
+                onClick={() => setResetPending(true)}
+                aria-label="Reset all band gains to 0 dB"
+              >
+                <RotateCcw size={12} strokeWidth={2.5} />
+                Reset
+              </button>
+            </Tip>
           )}
-          <button
-            className={`${styles.levelBtn} ${levelMatch ? styles.levelActive : ''}`}
-            onClick={() => setLevelMatch((v) => !v)}
-            aria-pressed={levelMatch}
-            aria-label={levelMatch ? 'Level match on — EQ path compensated for equal loudness' : 'Level match off — click to compensate EQ gain for equal A/B loudness'}
-          >
-            Level Match
-          </button>
-          <button
-            className={`${styles.abBtn} ${eqBypassed ? styles.abActive : ''}`}
-            onClick={() => setEQBypassed(!eqBypassed)}
-            aria-pressed={eqBypassed}
-            aria-label={eqBypassed ? 'A/B: EQ bypassed — click to restore' : 'A/B: EQ active — click to bypass'}
-          >
-            A/B
-          </button>
-          <button
-            className={styles.addBtn}
-            onClick={addBand}
-            disabled={bands.length >= 10}
-            aria-label={`Add EQ band (${bands.length} of 10 in use)`}
-          >
-            + Add Band
-          </button>
+          <Tip label="Match loudness between EQ and bypass paths">
+            <button
+              className={`${styles.levelBtn} ${levelMatch ? styles.levelActive : ''}`}
+              onClick={() => setLevelMatch((v) => !v)}
+              aria-pressed={levelMatch}
+              aria-label={levelMatch ? 'Level match on' : 'Level match off'}
+            >
+              Level Match
+            </button>
+          </Tip>
+          <Tip label="Bypass EQ to compare flat response">
+            <button
+              className={`${styles.abBtn} ${eqBypassed ? styles.abActive : ''}`}
+              onClick={() => setEQBypassed(!eqBypassed)}
+              aria-pressed={eqBypassed}
+              aria-label={eqBypassed ? 'A/B: EQ bypassed — click to restore' : 'A/B: EQ active — click to bypass'}
+            >
+              A/B
+            </button>
+          </Tip>
+          <Tip label={bands.length >= 10 ? 'Maximum 10 bands' : 'Add a new EQ band'}>
+            <button
+              className={styles.addBtn}
+              onClick={addBand}
+              disabled={bands.length >= 10}
+              aria-label={`Add EQ band (${bands.length} of 10 in use)`}
+            >
+              <Plus size={12} strokeWidth={2.5} />
+              Add Band
+            </button>
+          </Tip>
         </div>
       </div>
+
       <div className={styles.preampRow}>
         <label className={styles.preampLabel}>
           <span className={styles.preampName}>Preamp</span>
@@ -239,12 +265,23 @@ export function EQBandControl() {
       </div>
 
       <div className={styles.bands} role="list" aria-labelledby="eq-bands-heading">
-        {bands.map((band, i) => (
-          <div key={band.id} role="listitem">
-            <BandRow band={band} index={i} showRemove={bands.length > 1} />
-          </div>
-        ))}
+        <AnimatePresence initial={false}>
+          {bands.map((band, i) => (
+            <motion.div
+              key={band.id}
+              role="listitem"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.15, ease: 'easeInOut' }}
+              style={{ overflow: 'hidden' }}
+            >
+              <BandRow band={band} index={i} showRemove={bands.length > 1} />
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
+
       <p className={styles.hint} aria-live="polite">
         {bands.length}/10 bands · Drag handles on the curve, or use arrow keys when a handle is focused
       </p>

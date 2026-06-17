@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+import * as TooltipPrimitive from '@radix-ui/react-tooltip';
+import { motion } from 'framer-motion';
+import { Sun, Moon } from 'lucide-react';
 import { AppProvider } from './context/AppContext';
 import { EQCurve } from './components/EQCurve/EQCurve';
 import { EQBandControl } from './components/EQBandControl/EQBandControl';
@@ -32,6 +35,7 @@ function Header({ onToggleTheme, theme }: { onToggleTheme: () => void; theme: st
           onClick={onToggleTheme}
           aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
         >
+          {theme === 'light' ? <Moon size={15} strokeWidth={2} /> : <Sun size={15} strokeWidth={2} />}
           {theme === 'light' ? 'Dark' : 'Light'}
         </button>
         <ProfileManager />
@@ -40,15 +44,26 @@ function Header({ onToggleTheme, theme }: { onToggleTheme: () => void; theme: st
   );
 }
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0 },
+};
+
 function MainLayout() {
   return (
     <main className={styles.main} id="main-content">
-      <EQCurve />
-      <EQBandControl />
-      <div className={styles.row}>
+      <motion.div variants={cardVariants} initial="hidden" animate="visible" transition={{ duration: 0.2, ease: 'easeOut', delay: 0 }}>
         <OscillatorControl />
+      </motion.div>
+      <motion.div variants={cardVariants} initial="hidden" animate="visible" transition={{ duration: 0.2, ease: 'easeOut', delay: 0.05 }}>
+        <EQCurve />
+      </motion.div>
+      <motion.div variants={cardVariants} initial="hidden" animate="visible" transition={{ duration: 0.2, ease: 'easeOut', delay: 0.1 }}>
+        <EQBandControl />
+      </motion.div>
+      <motion.div variants={cardVariants} initial="hidden" animate="visible" transition={{ duration: 0.2, ease: 'easeOut', delay: 0.15 }}>
         <AudioFilePlayer />
-      </div>
+      </motion.div>
     </main>
   );
 }
@@ -69,16 +84,18 @@ export default function App() {
       {!safetyAccepted && <SafetyModal onAccept={handleAccept} />}
       <BrowserRouter>
         <AppProvider safetyAccepted={safetyAccepted}>
-          <div className={styles.app} aria-hidden={!safetyAccepted || undefined}>
-            <a href="#main-content" className={styles.skipLink}>Skip to main content</a>
-            <Header onToggleTheme={toggleTheme} theme={theme} />
-            <Routes>
-              <Route path="/" element={<MainLayout />} />
-              <Route path="/wizard" element={<Wizard />} />
-            </Routes>
-            <Footer />
-            <PanicButton />
-          </div>
+          <TooltipPrimitive.Provider delayDuration={700}>
+            <div className={styles.app} aria-hidden={!safetyAccepted || undefined}>
+              <a href="#main-content" className={styles.skipLink}>Skip to main content</a>
+              <Header onToggleTheme={toggleTheme} theme={theme} />
+              <Routes>
+                <Route path="/" element={<MainLayout />} />
+                <Route path="/wizard" element={<Wizard />} />
+              </Routes>
+              <Footer />
+              <PanicButton />
+            </div>
+          </TooltipPrimitive.Provider>
         </AppProvider>
       </BrowserRouter>
     </>

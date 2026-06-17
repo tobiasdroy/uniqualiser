@@ -27,6 +27,9 @@
 }
 
 .addBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -49,6 +52,9 @@
 }
 
 .resetBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   background: transparent;
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -349,4 +355,29 @@
   font-size: 11px;
   color: var(--text-secondary);
   text-align: center;
+}
+
+/* ── Radix Tooltip ────────────────────────────────────────────────── */
+
+.tooltip {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: var(--font-weight-medium);
+  z-index: 200;
+  animation: tooltipIn 0.12s ease;
+}
+
+.tooltipArrow {
+  fill: var(--bg-elevated);
+}
+
+@keyframes tooltipIn {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

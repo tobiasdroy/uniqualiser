@@ -8,10 +8,13 @@
 }
 
 .btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--font);
   font-size: 13px;
   font-weight: var(--font-weight-medium);
-  padding: 7px 16px;
+  padding: 7px 14px;
   border-radius: 8px;
   border: 1px solid var(--border);
   background: var(--bg-elevated);

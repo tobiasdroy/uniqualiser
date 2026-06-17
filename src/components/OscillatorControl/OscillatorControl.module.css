@@ -2,7 +2,7 @@
   background: var(--bg-secondary);
   border-radius: 12px;
   box-shadow: var(--shadow);
-  padding: 20px;
+  padding: 20px 24px;
 }
 
 .header {
@@ -26,57 +26,124 @@
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.5px;
+  font-family: var(--font);
+  background: transparent;
+  border: none;
+  outline: none;
+  text-align: right;
+  width: 160px;
+  cursor: text;
+  padding: 0;
 }
 
-.sliderWrap {
+.freqDisplay:focus {
+  color: var(--accent);
+}
+
+.freqDisplay[readonly] {
+  cursor: default;
+  pointer-events: none;
+}
+
+/* ── Radix Slider ─────────────────────────────────────────────────── */
+
+.sliderSection {
+  margin-bottom: 16px;
+}
+
+.sliderRoot {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
+  user-select: none;
+  touch-action: none;
+  width: 100%;
+  height: 22px;
 }
 
-.rangeLabel {
-  font-size: 11px;
-  color: var(--text-secondary);
-  font-weight: var(--font-weight-medium);
-  white-space: nowrap;
-}
-
-.slider {
-  flex: 1;
-  -webkit-appearance: none;
-  appearance: none;
+.sliderTrack {
+  position: relative;
+  flex-grow: 1;
   height: 4px;
-  border-radius: 2px;
   background: var(--bg-elevated);
-  outline: none;
-  cursor: pointer;
   border: 1px solid var(--border);
+  border-radius: 9999px;
 }
 
-.slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
+.sliderRange {
+  position: absolute;
+  height: 100%;
+  background: var(--accent);
+  opacity: 0.4;
+  border-radius: 9999px;
+}
+
+.sliderThumb {
+  display: block;
   width: 18px;
   height: 18px;
-  border-radius: 50%;
   background: var(--accent);
+  border-radius: 50%;
   border: 2px solid var(--bg-primary);
+  box-shadow: 0 0 0 1px var(--accent), 0 2px 8px rgba(0, 98, 204, 0.35);
   cursor: grab;
-  box-shadow: 0 0 8px rgba(10, 132, 255, 0.5);
+  transition: box-shadow 0.15s, transform 0.1s;
+  outline: none;
 }
 
-.slider::-webkit-slider-thumb:active {
+.sliderThumb:hover {
+  box-shadow: 0 0 0 2px var(--accent), 0 2px 14px rgba(0, 98, 204, 0.55);
+  transform: scale(1.1);
+}
+
+.sliderThumb:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.sliderThumb[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.sliderThumb:not([data-disabled]):active {
   cursor: grabbing;
 }
 
-.slider:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+/* ── Frequency axis tick marks ────────────────────────────────────── */
+
+.tickMarks {
+  position: relative;
+  height: 18px;
+  margin-top: 7px;
+  /* 9px matches Radix thumb half-width so 0%/100% align with track endpoints */
+  padding: 0 9px;
 }
 
-.slider:disabled::-webkit-slider-thumb {
-  cursor: not-allowed;
+.tick {
+  position: absolute;
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  top: 0;
 }
+
+.tick[data-anchor='left'] {
+  transform: translateX(0);
+}
+
+.tick[data-anchor='center'] {
+  transform: translateX(-50%);
+}
+
+.tick[data-anchor='right'] {
+  transform: translateX(-100%);
+}
+
+/* ── Sweep progress ───────────────────────────────────────────────── */
 
 .progressWrap {
   height: 2px;
@@ -93,19 +160,25 @@
   transition: width 0.05s linear;
 }
 
+/* ── Controls row ─────────────────────────────────────────────────── */
+
 .controls {
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-top: 4px;
 }
 
 .playBtn,
 .sweepBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--font);
   font-size: 14px;
   font-weight: var(--font-weight-medium);
   border-radius: 8px;
-  padding: 8px 20px;
+  padding: 8px 18px;
   cursor: pointer;
   border: 1.5px solid var(--border);
   background: var(--bg-elevated);

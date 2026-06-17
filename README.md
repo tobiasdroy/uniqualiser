@@ -6,7 +6,7 @@ All processing is done client-side via the Web Audio API — no server, no data 
 
 ## Features
 
-- **Sine oscillator** — sweep 20 Hz to 20 kHz manually or via auto-sweep (10 / 30 / 60 s)
+- **Sine oscillator** — sweep 20 Hz to 20 kHz manually or via auto-sweep (10 / 30 / 60 s); click the frequency display to type an exact value (e.g. 2,220 Hz) and the slider jumps to that point
 - **Parametric EQ** — 5 bands by default, expandable to 10; peak, low shelf, and high shelf filter types per band; preamp gain control (−20 to +6 dB) for overall level before boosting
 - **Live EQ curve** — SVG frequency response computed in real time; drag handles to adjust frequency and gain directly on the curve
 - **A/B bypass** — toggle the entire EQ in and out with one button to compare your correction against the flat signal
@@ -27,6 +27,9 @@ A safety notice is shown on first use with instructions to lower your volume bef
 - Web Audio API (no audio libraries)
 - React Router
 - CSS Modules
+- [Radix UI](https://www.radix-ui.com) — accessible slider and tooltip primitives
+- [Framer Motion](https://www.framer.com/motion/) — layout and entrance animations
+- [Lucide React](https://lucide.dev) — icon set
 
 ## Getting started
 
@@ -41,7 +44,7 @@ Open [http://localhost:5173](http://localhost:5173).
 
 1. Accept the safety notice and lower your listening volume before starting
 2. Click **Play** to start the sine oscillator
-3. Drag the frequency slider or use **Auto Sweep** to move through the spectrum
+3. Drag the frequency slider, use **Auto Sweep**, or click the frequency display and type an exact value to move through the spectrum
 4. Where you hear a peak (louder than expected), add a negative gain correction on that band. Where you hear a trough, add positive gain.
 5. Adjust until the oscillator sounds perceptually flat across the range
 6. Enable **Level Match** before using A/B — it automatically compensates the EQ path so both states are at equal perceived loudness, removing the "louder sounds better" bias

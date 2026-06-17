@@ -1,4 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import * as SliderPrimitive from '@radix-ui/react-slider';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Play, Pause, Music } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import styles from './AudioFilePlayer.module.css';
 
@@ -22,11 +25,9 @@ export function AudioFilePlayer() {
   const isScrubbingRef = useRef(false);
   const rafRef = useRef<number | null>(null);
 
-  // Keep refs in sync
   useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
   useEffect(() => { isScrubbingRef.current = isScrubbing; }, [isScrubbing]);
 
-  // rAF loop: update scrubber and detect natural track end
   useEffect(() => {
     if (!fileName) return;
     const tick = () => {
@@ -103,15 +104,14 @@ export function AudioFilePlayer() {
     setScrubValue(engineRef.current?.getFilePosition() ?? 0);
   }, [engineRef]);
 
-  const handleScrubChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setScrubValue(parseFloat(e.target.value));
+  const handleScrubChange = useCallback(([v]: number[]) => {
+    setScrubValue(v);
   }, []);
 
-  const handleScrubEnd = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const pos = parseFloat(e.target.value);
+  const handleScrubCommit = useCallback(async ([v]: number[]) => {
     setIsScrubbing(false);
-    setCurrentTime(pos);
-    await engineRef.current?.seekFile(pos);
+    setCurrentTime(v);
+    await engineRef.current?.seekFile(v);
     if (engineRef.current?.getIsFilePlaying()) setIsPlaying(true);
   }, [engineRef]);
 
@@ -146,42 +146,61 @@ export function AudioFilePlayer() {
         {fileName ? (
           <span className={styles.fileName}>{fileName}</span>
         ) : (
-          <span className={styles.dropHint}>Drop audio file or click to browse</span>
+          <span className={styles.dropHint}>
+            <Music size={22} aria-hidden="true" className={styles.dropIcon} />
+            Drop audio file or click to browse
+          </span>
         )}
       </div>
 
-      {fileName && (
-        <div className={styles.transport}>
-          <button
-            className={`${styles.playBtn} ${isPlaying ? styles.active : ''}`}
-            onClick={handlePlayPause}
-            aria-label={isPlaying ? 'Pause audio file' : 'Play audio file'}
-            aria-pressed={isPlaying}
+      <AnimatePresence>
+        {fileName && (
+          <motion.div
+            key="transport"
+            className={styles.transport}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.15 }}
           >
-            {isPlaying ? 'Pause' : 'Play'}
-          </button>
+            <button
+              className={`${styles.playBtn} ${isPlaying ? styles.active : ''}`}
+              onClick={handlePlayPause}
+              aria-label={isPlaying ? 'Pause audio file' : 'Play audio file'}
+              aria-pressed={isPlaying}
+            >
+              {isPlaying
+                ? <Pause size={13} strokeWidth={2.5} />
+                : <Play size={13} strokeWidth={2.5} />}
+              {isPlaying ? 'Pause' : 'Play'}
+            </button>
 
-          <div className={styles.scrubberWrap}>
-            <input
-              type="range"
-              className={styles.scrubber}
-              min={0}
-              max={duration || 1}
-              step={0.01}
-              value={scrubberValue}
-              aria-label="Playback position"
-              aria-valuetext={`${formatTime(scrubberValue)} of ${formatTime(duration)}`}
-              onPointerDown={handleScrubStart}
-              onChange={handleScrubChange}
-              onPointerUp={handleScrubEnd as unknown as React.PointerEventHandler}
-            />
-          </div>
+            <div className={styles.scrubberWrap}>
+              <SliderPrimitive.Root
+                className={styles.scrubberRoot}
+                min={0}
+                max={duration || 1}
+                step={0.01}
+                value={[scrubberValue]}
+                onPointerDown={handleScrubStart}
+                onValueChange={handleScrubChange}
+                onValueCommit={handleScrubCommit}
+                aria-label="Playback position"
+                aria-valuetext={`${formatTime(scrubberValue)} of ${formatTime(duration)}`}
+              >
+                <SliderPrimitive.Track className={styles.scrubberTrack}>
+                  <SliderPrimitive.Range className={styles.scrubberRange} />
+                </SliderPrimitive.Track>
+                <SliderPrimitive.Thumb className={styles.scrubberThumb} />
+              </SliderPrimitive.Root>
+            </div>
 
-          <span className={styles.time} aria-live="off">
-            {formatTime(scrubberValue)} / {formatTime(duration)}
-          </span>
-        </div>
-      )}
+            <span className={styles.time} aria-live="off">
+              {formatTime(scrubberValue)} / {formatTime(duration)}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

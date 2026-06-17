@@ -1,4 +1,5 @@
 import { useRef, useCallback } from 'react';
+import { FolderOpen, Download } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { exportToAPO, importFromAPO } from '../../audio/eqProfile';
 import styles from './ProfileManager.module.css';
@@ -50,14 +51,16 @@ export function ProfileManager() {
         onClick={() => fileInputRef.current?.click()}
         aria-label="Import EQ profile from APO .txt file"
       >
-        Import Profile
+        <FolderOpen size={14} strokeWidth={2} />
+        Import
       </button>
       <button
         className={styles.btn}
         onClick={handleExport}
         aria-label="Export EQ profile as APO .txt file"
       >
-        Export Profile
+        <Download size={14} strokeWidth={2} />
+        Export
       </button>
     </div>
   );

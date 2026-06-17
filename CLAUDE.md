@@ -12,8 +12,12 @@ A guided wizard flow is planned (`/wizard` route) but not yet built. The archite
 
 - **Vite + React + TypeScript**
 - **Web Audio API** — raw nodes, no libraries
-- **React Router** (`BrowserRouter`) — `/ `(main tool) and `/wizard` (stub) routes
+- **React Router** (`BrowserRouter`) — `/` (main tool) and `/wizard` (stub) routes
 - **CSS Modules** + CSS custom properties — no CSS-in-JS, no Tailwind
+- **`@radix-ui/react-slider`** — frequency and scrubber sliders (both use this instead of native `<input type="range">`)
+- **`@radix-ui/react-tooltip`** — tooltips on EQ band header buttons; `<Tooltip.Provider delayDuration={700}>` wraps the whole app in `App.tsx`
+- **`framer-motion`** — band row add/remove animations (`AnimatePresence`), sweep progress bar fade, audio transport entrance, page-load card stagger
+- **`lucide-react`** — icons throughout (Play, Square, Waves, RotateCcw, Plus, Pause, Music, FolderOpen, Download, Sun, Moon)
 
 ---
 
@@ -56,8 +60,8 @@ src/
 ├── components/
 │   ├── EQCurve/            # SVG frequency response + draggable handles
 │   ├── EQBandControl/      # Per-band freq/gain/Q/type controls
-│   ├── OscillatorControl/  # Log-scale slider + play/sweep controls
-│   ├── AudioFilePlayer/    # Upload, playback, EQ bypass toggle
+│   ├── OscillatorControl/  # Radix log-scale slider + play/sweep controls + editable freq display
+│   ├── AudioFilePlayer/    # Upload, playback with Radix scrubber, animated transport
 │   ├── ProfileManager/     # Import/export buttons (APO format)
 │   ├── SafetyModal/        # Gatekeeper + reviewable safety notice
 │   ├── PanicButton/        # Fixed bottom-right emergency stop
@@ -164,13 +168,25 @@ AudioBufferSourceNode            │
 | `AudioEngine` instance | `useRef` in `useAudioEngine` (NOT React state) |
 | `isEngineReady` | `AppContext` |
 | `eqBypassed` | `AppContext` (drives A/B toggle + EQ curve dimming) |
-| Oscillator `isPlaying`, `currentFreq` | `OscillatorControl` local state |
+| Oscillator `isPlaying`, `currentFreq`, `editingFreq` | `OscillatorControl` local state |
 | Sweep `isSweeping`, `progress`, `currentFreq` | `useSweep` |
 | File `isPlaying`, `currentTime`, `duration`, `isScrubbing` | `AudioFilePlayer` local state |
 
 **Sync pattern:** event handler calls `engine.setBandXxx(index, value)` AND `dispatch(UPDATE_BAND)` together. The reducer is pure — no side effects inside it.
 
 `preampGain` (dB, −20 to +6) is stored in the reducer and converted to linear before calling `engine.setMasterGain()`. `AudioEngine` stores `preampLinear` internally so that `startOscillator()`/`startFile()` restore to the correct level after a `panic()` call — they must restore `this.preampLinear`, not a hardcoded `1`.
+
+---
+
+## Oscillator control
+
+The oscillator sits full-width at the top of the page. Key details:
+
+- **Slider** — `@radix-ui/react-slider` mapping 0–1000 internally to 20–20,000 Hz on a log scale (`sliderToFreq` / `freqToSlider` helpers). ARIA attributes on the `Thumb` override Radix's defaults to expose the real Hz range.
+- **Tick axis** — ten log-spaced labels (20 → 20k) rendered in a `tickMarks` div below the slider root. `padding: 0 9px` compensates for the thumb's 9 px half-width so 0 %/100 % positions align with track endpoints. Edge labels use `data-anchor="left"/"right"` to avoid clipping.
+- **Frequency display** — an `<input type="text">` styled to look like a large read-only number. On focus it switches to a raw integer (e.g. `1115`); on blur or Enter it strips commas, clamps to 20–20,000, updates `frequency` state, moves the slider, and updates the oscillator pitch if playing. Escape reverts. The field is `readOnly` during a sweep.
+- **Progress bar** — wrapped in `AnimatePresence` for a fade in/out when sweep starts/stops.
+- **Layout** — `OscillatorControl` is the first card in `MainLayout`; the old two-column row (oscillator + audio player) was removed.
 
 ---
 
@@ -199,10 +215,12 @@ A single `Preamp [input] dB` row sits between the header and the band list. Rang
 
 ### Header action buttons (right side of EQ Bands header)
 
+All four buttons have Radix tooltips (via the local `Tip` helper in `EQBandControl.tsx`). Band rows animate in/out with `AnimatePresence` + `motion.div` (height: 0 → auto, opacity fade).
+
 - **Reset** — zeroes all band gains (frequencies, Q, and types are unchanged). Uses an inline two-step confirm: clicking "Reset" replaces the button in-place with "Reset all gains?" + Confirm + Cancel. No browser dialog. State is local to `EQBandControl` (`resetPending` boolean). `resetGains` lives in `useEQBands` as a `RESET_GAINS` reducer action.
-- **Level** — toggles `levelMatch` local state. When active (highlighted green), a `useEffect` in `EQBandControl` calls `computeAverageGainDb(filterNodes)` from `frequencyMath.ts` and sets `engine.setBypassTrim(10^(avgDb/20))`. This attenuates the flat bypass signal to match the EQ'd level — the EQ path is never modified, so there is no clipping risk. Recomputes automatically on every band change. `bypassTrimNode` is only in the bypass path, so when EQ is active the trim has no effect.
+- **Level Match** — toggles `levelMatch` local state. When active (highlighted green), a `useEffect` in `EQBandControl` calls `computeAverageGainDb(filterNodes)` from `frequencyMath.ts` and sets `engine.setBypassTrim(10^(avgDb/20))`. This attenuates the flat bypass signal to match the EQ'd level — the EQ path is never modified, so there is no clipping risk. Recomputes automatically on every band change. `bypassTrimNode` is only in the bypass path, so when EQ is active the trim has no effect.
 - **A/B** — toggles `eqBypassed` in `AppContext`. When active (highlighted in accent colour, `aria-pressed=true`) the entire EQ filter chain and `eqMakeupGainNode` are bypassed in the audio graph and the EQ curve dims.
-- **+ Add Band** — adds a new band (disabled at 10).
+- **Add Band** — adds a new band (disabled at 10).
 
 ---
 
@@ -263,7 +281,7 @@ Local-only processing. No data leaves the browser. One-line notice in the footer
 - Frequency label text anchors: `"start"` for 20 Hz, `"end"` for 20 kHz, `"middle"` for all others — prevents labels clipping outside the SVG.
 - `startOscillator()`/`startFile()` must restore `masterGainNode` to `this.preampLinear`, not hardcoded `1.0`, otherwise a panic followed by replay silently overrides the user's preamp setting.
 - `AudioBufferSourceNode` is one-shot and has no seek or pause. Pause is implemented by storing `playbackOffset = getFilePosition()` then stopping the source. Resume calls `startFile(offset)` which creates a fresh source. Seek follows the same pattern. `onFileEnded` callback is stored on the engine and reused across resume/seek so React can reset state when the track ends naturally.
-- The scrubber commits the seek on `onPointerUp`, not `onChange`, to avoid creating a new buffer source on every pixel of drag. During scrubbing, `isScrubbingRef` blocks the rAF loop from overwriting the visual position.
+- The scrubber (Radix Slider) commits the seek on `onValueCommit` (pointer up or key release), not `onValueChange`, to avoid creating a new buffer source on every pixel of drag. `onPointerDown` on the root sets `isScrubbing = true`; `isScrubbingRef` blocks the rAF loop from overwriting the visual position during drag.
 - `bypassTrimNode` must be disconnected in `rebuildChain()` at the top of every call (alongside filter nodes), otherwise stale connections to `analyserNode` accumulate. It only reconnects in the bypass branch.
 
 ---
