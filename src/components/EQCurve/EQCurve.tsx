@@ -115,12 +115,14 @@ export function EQCurve() {
       >
         {/* Grid */}
         <g className={styles.grid} aria-hidden="true">
-          {GRID_FREQUENCIES.map((freq) => {
+          {GRID_FREQUENCIES.map((freq, i) => {
             const x = freqToX(freq, width);
+            const anchor =
+              i === 0 ? 'start' : i === GRID_FREQUENCIES.length - 1 ? 'end' : 'middle';
             return (
               <g key={freq}>
                 <line x1={x} y1={0} x2={x} y2={SVG_HEIGHT} />
-                <text x={x} y={SVG_HEIGHT - 6} textAnchor="middle">
+                <text x={x} y={SVG_HEIGHT - 6} textAnchor={anchor}>
                   {formatFrequency(freq)}
                 </text>
               </g>
