@@ -116,19 +116,18 @@ export interface EQProfile {
 Normal (EQ active):
 ```
 OscillatorNode  → oscGainNode  ─┐
-                                 ├→ filterNode[0] → ... → filterNode[N] → analyserNode
-AudioBufferSourceNode            │   (or fileGainNode → analyserNode when fileEQEnabled=false)   │
-  via fileGainNode  ─────────────┘                                                               ↓
-                                                                                         masterGainNode
-                                                                                                ↓
-                                                                                   safetyLimiterNode (gain = 0.89, ≈ −1 dBFS)
-                                                                                                ↓
-                                                                                    compressorNode (threshold −1 dBFS, ratio 20:1)
-                                                                                                ↓
-                                                                                           destination
+                                 ├→ filterNode[0] → ... → filterNode[N] → eqMakeupGainNode → analyserNode
+AudioBufferSourceNode            │   (or fileGainNode → analyserNode when fileEQEnabled=false)             ↓
+  via fileGainNode  ─────────────┘                                                               masterGainNode
+                                                                                                        ↓
+                                                                                           safetyLimiterNode (gain = 0.89, ≈ −1 dBFS)
+                                                                                                        ↓
+                                                                                            compressorNode (threshold −1 dBFS, ratio 20:1)
+                                                                                                        ↓
+                                                                                                   destination
 ```
 
-A/B bypassed (`eqBypassed = true`):
+A/B bypassed (`eqBypassed = true`) — `eqMakeupGainNode` disconnected:
 ```
 OscillatorNode  → oscGainNode  ─┐
                                  ├→ analyserNode → masterGainNode → ... → destination
@@ -143,8 +142,8 @@ AudioBufferSourceNode            │
 3. **BiquadFilterNode setters use direct `.value =` assignment**, not `setValueAtTime`, so `getFrequencyResponse()` sees changes immediately (used by EQCurve to draw the live curve).
 4. **`rebuildChain()` must be called after adding/removing bands, and checks both `eqBypassed` and `fileEQEnabled` flags.** It disconnects all nodes between `oscGainNode`/`fileGainNode` and `analyserNode`, then reconnects in the correct topology.
 5. **Two independent bypass flags:**
-   - `fileEQEnabled` (per `AudioFilePlayer`) — only routes the file player signal around the EQ. The oscillator still goes through filters. Acceptable click artefacts.
-   - `eqBypassed` (A/B toggle in `EQBandControl`) — routes both sources directly to `analyserNode`, skipping all filter nodes entirely. Exposed via `AppContext` as `eqBypassed` / `setEQBypassed`. When active the EQ curve dims to 20% opacity.
+   - `fileEQEnabled` (per `AudioFilePlayer`) — only routes the file player signal around the EQ (and makeup gain). The oscillator still goes through filters. Acceptable click artefacts.
+   - `eqBypassed` (A/B toggle in `EQBandControl`) — routes both sources directly to `analyserNode`, skipping filters AND `eqMakeupGainNode`. Exposed via `AppContext`. When active the EQ curve dims to 20% opacity.
 6. **`panic()`** sets `masterGainNode.gain` to 0 immediately and stops all sources. `startOscillator()` / `startFile()` restore `masterGainNode.gain` to 1 before playing in case `panic()` was previously called.
 
 ### FilterType → BiquadFilterType
@@ -201,7 +200,8 @@ A single `Preamp [input] dB` row sits between the header and the band list. Rang
 ### Header action buttons (right side of EQ Bands header)
 
 - **Reset** — zeroes all band gains (frequencies, Q, and types are unchanged). Uses an inline two-step confirm: clicking "Reset" replaces the button in-place with "Reset all gains?" + Confirm + Cancel. No browser dialog. State is local to `EQBandControl` (`resetPending` boolean). `resetGains` lives in `useEQBands` as a `RESET_GAINS` reducer action.
-- **A/B** — toggles `eqBypassed` in `AppContext`. When active (highlighted in accent colour, `aria-pressed=true`) the entire EQ filter chain is bypassed in the audio graph and the EQ curve dims.
+- **Level** — toggles `levelMatch` local state. When active (highlighted green), a `useEffect` in `EQBandControl` calls `computeAverageGainDb(filterNodes)` from `frequencyMath.ts` and sets `engine.setEQMakeupGain(10^(-avgDb/20))`. This compensates the EQ path so that A/B comparison is at equal perceived loudness — eliminating the "louder sounds better" bias. Recomputes automatically on every band change. `eqMakeupGainNode` is inside the EQ chain only (not the bypass path), so the compensation is absent when A/B is bypassed.
+- **A/B** — toggles `eqBypassed` in `AppContext`. When active (highlighted in accent colour, `aria-pressed=true`) the entire EQ filter chain and `eqMakeupGainNode` are bypassed in the audio graph and the EQ curve dims.
 - **+ Add Band** — adds a new band (disabled at 10).
 
 ---
@@ -262,6 +262,7 @@ Local-only processing. No data leaves the browser. One-line notice in the footer
 - `frequencyMath.ts` uses shared module-level `MAG_BUF` / `PHASE_BUF` buffers. These are not thread-safe, but Web Audio runs on the main thread so this is fine.
 - Frequency label text anchors: `"start"` for 20 Hz, `"end"` for 20 kHz, `"middle"` for all others — prevents labels clipping outside the SVG.
 - `startOscillator()`/`startFile()` must restore `masterGainNode` to `this.preampLinear`, not hardcoded `1.0`, otherwise a panic followed by replay silently overrides the user's preamp setting.
+- `eqMakeupGainNode` must be disconnected in `rebuildChain()` at the top of every call (alongside filter nodes), otherwise stale connections accumulate across chain rebuilds.
 
 ---
 
