@@ -156,16 +156,20 @@ export function EQBandControl() {
     setResetPending(false);
   }, [resetGains]);
 
-  // Recompute and apply makeup gain whenever bands or levelMatch changes
+  // Recompute bypass trim whenever bands or levelMatch changes.
+  // Trim attenuates the flat bypass signal to match the EQ'd level —
+  // the EQ path itself is never modified.
   useEffect(() => {
     if (!isEngineReady || !engineRef.current) return;
     if (!levelMatch) {
-      engineRef.current.setEQMakeupGain(1);
+      engineRef.current.setBypassTrim(1);
       return;
     }
     const filterNodes = engineRef.current.getFilterNodes();
     const avgDb = computeAverageGainDb(filterNodes);
-    engineRef.current.setEQMakeupGain(Math.pow(10, -avgDb / 20));
+    // avgDb is negative for cuts, positive for boosts.
+    // Apply the same gain to bypass so it matches the EQ path's average level.
+    engineRef.current.setBypassTrim(Math.pow(10, avgDb / 20));
   }, [bands, levelMatch, isEngineReady, engineRef]);
 
   return (
