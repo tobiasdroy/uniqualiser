@@ -5,7 +5,7 @@ export interface EQBand {
   enabled: boolean;
   type: FilterType;
   frequency: number;  // Hz, 20–20000
-  gain: number;       // dB, -24 to +24
+  gain: number;       // dB, -18 to +18
   q: number;          // 0.1 to 10
 }
 

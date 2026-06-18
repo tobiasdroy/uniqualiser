@@ -7,8 +7,104 @@ import { computeAverageGainDb } from '../../audio/frequencyMath';
 import type { EQBand, FilterType } from '../../types';
 import styles from './EQBandControl.module.css';
 
-const FILTER_LABELS: Record<FilterType, string> = { PK: 'Peak', LSC: 'Low Shelf', HSC: 'High Shelf' };
+const FILTER_LABELS: Record<FilterType, string> = { PK: 'Peak', LSC: 'Lo Shelf', HSC: 'Hi Shelf' };
 const FILTER_TYPES: FilterType[] = ['PK', 'LSC', 'HSC'];
+
+// ── Knob ─────────────────────────────────────────────────────────────────────
+
+const K_SIZE = 32;
+const K_CX = K_SIZE / 2;
+const K_CY = K_SIZE / 2;
+const K_R = 11;
+const K_START = 135;  // SVG degrees: 7:30 clock position
+const K_SWEEP = 270;  // degrees of total travel
+
+function polarXY(r: number, deg: number): [number, number] {
+  const rad = (deg * Math.PI) / 180;
+  return [K_CX + r * Math.cos(rad), K_CY + r * Math.sin(rad)];
+}
+
+function arcD(startDeg: number, sweepDeg: number): string {
+  if (Math.abs(sweepDeg) < 0.5) return '';
+  const [x1, y1] = polarXY(K_R, startDeg);
+  const [x2, y2] = polarXY(K_R, startDeg + sweepDeg);
+  return `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${K_R} ${K_R} 0 ${sweepDeg > 180 ? 1 : 0} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`;
+}
+
+interface KnobProps {
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  onChange: (v: number) => void;
+  label: string;
+  logScale?: boolean;
+}
+
+function Knob({ value, min, max, step, onChange, label, logScale = false }: KnobProps) {
+  const drag = useRef({ active: false, startY: 0, startT: 0 });
+
+  const toT = (v: number) =>
+    logScale ? Math.log(v / min) / Math.log(max / min) : (v - min) / (max - min);
+
+  const fromT = (t: number) => {
+    const c = Math.max(0, Math.min(1, t));
+    const raw = logScale ? min * Math.pow(max / min, c) : min + c * (max - min);
+    const dp = Math.max(0, Math.round(-Math.log10(step)));
+    return Math.max(min, Math.min(max, parseFloat(raw.toFixed(dp))));
+  };
+
+  const t = Math.max(0, Math.min(1, toT(value)));
+  const valSweep = t * K_SWEEP;
+  const bgD = arcD(K_START, K_SWEEP);
+  const valD = arcD(K_START, valSweep);
+  const [indX, indY] = polarXY(K_R - 3.5, K_START + valSweep);
+
+  return (
+    <svg
+      width={K_SIZE}
+      height={K_SIZE}
+      className={styles.knob}
+      role="slider"
+      aria-label={label}
+      aria-valuenow={value}
+      aria-valuemin={min}
+      aria-valuemax={max}
+      tabIndex={0}
+      onPointerDown={(e) => {
+        e.preventDefault();
+        e.currentTarget.setPointerCapture(e.pointerId);
+        drag.current = { active: true, startY: e.clientY, startT: toT(value) };
+      }}
+      onPointerMove={(e) => {
+        if (!drag.current.active) return;
+        onChange(fromT(drag.current.startT + (drag.current.startY - e.clientY) / 200));
+      }}
+      onPointerUp={(e) => {
+        drag.current.active = false;
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }}
+      onKeyDown={(e) => {
+        const mult = e.shiftKey ? 10 : 1;
+        if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
+          e.preventDefault();
+          onChange(Math.max(min, Math.min(max, value + step * mult)));
+        } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
+          e.preventDefault();
+          onChange(Math.max(min, Math.min(max, value - step * mult)));
+        }
+      }}
+    >
+      <path d={bgD} fill="none" stroke="var(--bg-primary)" strokeWidth={2.5} strokeLinecap="round" />
+      {valSweep > 0.5 && (
+        <path d={valD} fill="none" stroke="var(--accent)" strokeWidth={2.5} strokeLinecap="round" />
+      )}
+      <circle cx={indX.toFixed(2)} cy={indY.toFixed(2)} r={2} fill="var(--accent)" />
+    </svg>
+  );
+}
+
+// ── Tooltip ───────────────────────────────────────────────────────────────────
 
 function Tip({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -23,6 +119,8 @@ function Tip({ label, children }: { label: string; children: React.ReactNode }) 
     </TooltipPrimitive.Root>
   );
 }
+
+// ── NumberInput ───────────────────────────────────────────────────────────────
 
 // Holds local string state while the user is typing so intermediate values
 // (empty field, partial numbers, leading minus) don't snap back. Commits and
@@ -78,12 +176,19 @@ function NumberInput({
   );
 }
 
+// ── BandRow ───────────────────────────────────────────────────────────────────
+
 function BandRow({ band, index, showRemove }: { band: EQBand; index: number; showRemove: boolean }) {
   const { updateBand, removeBand } = useAppContext();
   const n = index + 1;
+  const showQ = band.type === 'PK';
 
   return (
-    <div className={`${styles.row} ${!band.enabled ? styles.disabled : ''}`} role="group" aria-label={`EQ band ${n}`}>
+    <div
+      className={`${styles.row} ${!band.enabled ? styles.disabled : ''}`}
+      role="group"
+      aria-label={`EQ band ${n}`}
+    >
       <button
         className={`${styles.enableToggle} ${band.enabled ? styles.enabled : ''}`}
         onClick={() => updateBand(band.id, { enabled: !band.enabled })}
@@ -102,51 +207,87 @@ function BandRow({ band, index, showRemove }: { band: EQBand; index: number; sho
             aria-label={`Set band ${n} to ${FILTER_LABELS[t]}`}
             aria-pressed={band.type === t}
           >
-            {t}
+            {FILTER_LABELS[t]}
           </button>
         ))}
       </div>
 
-      <label className={styles.paramLabel}>
-        <span className={styles.paramName}>Freq</span>
-        <NumberInput
+      <div className={styles.paramGroup}>
+        <Knob
           value={band.frequency}
           min={20}
           max={20000}
           step={1}
-          className={styles.paramInput}
-          aria-label={`Band ${n} frequency in Hz`}
+          logScale
           onChange={(v) => updateBand(band.id, { frequency: v })}
+          label={`Band ${n} frequency`}
         />
-        <span className={styles.paramUnit} aria-hidden="true">Hz</span>
-      </label>
+        <label className={styles.paramLabel}>
+          <span className={styles.paramName}>Freq</span>
+          <NumberInput
+            value={band.frequency}
+            min={20}
+            max={20000}
+            step={1}
+            className={styles.paramInput}
+            aria-label={`Band ${n} frequency in Hz`}
+            onChange={(v) => updateBand(band.id, { frequency: v })}
+          />
+          <span className={styles.paramUnit} aria-hidden="true">Hz</span>
+        </label>
+      </div>
 
-      <label className={styles.paramLabel}>
-        <span className={styles.paramName}>Gain</span>
-        <NumberInput
+      <div className={styles.paramGroup}>
+        <Knob
           value={band.gain}
-          min={-24}
-          max={24}
+          min={-18}
+          max={18}
           step={0.1}
-          className={styles.paramInput}
-          aria-label={`Band ${n} gain in decibels`}
           onChange={(v) => updateBand(band.id, { gain: v })}
+          label={`Band ${n} gain`}
         />
-        <span className={styles.paramUnit} aria-hidden="true">dB</span>
-      </label>
+        <label className={styles.paramLabel}>
+          <span className={styles.paramName}>Gain</span>
+          <NumberInput
+            value={band.gain}
+            min={-18}
+            max={18}
+            step={0.1}
+            className={styles.paramInput}
+            aria-label={`Band ${n} gain in decibels`}
+            onChange={(v) => updateBand(band.id, { gain: v })}
+          />
+          <span className={styles.paramUnit} aria-hidden="true">dB</span>
+        </label>
+      </div>
 
-      <label className={styles.paramLabel}>
-        <span className={styles.paramName}>Q</span>
-        <NumberInput
-          value={band.q}
-          min={0.1}
-          max={10}
-          step={0.01}
-          className={styles.paramInput}
-          aria-label={`Band ${n} Q factor (bandwidth)`}
-          onChange={(v) => updateBand(band.id, { q: v })}
-        />
-      </label>
+      {showQ ? (
+        <div className={styles.paramGroup}>
+          <Knob
+            value={band.q}
+            min={0.1}
+            max={10}
+            step={0.01}
+            logScale
+            onChange={(v) => updateBand(band.id, { q: v })}
+            label={`Band ${n} Q`}
+          />
+          <label className={styles.paramLabel}>
+            <span className={styles.paramName}>Q</span>
+            <NumberInput
+              value={band.q}
+              min={0.1}
+              max={10}
+              step={0.01}
+              className={styles.paramInput}
+              aria-label={`Band ${n} Q factor (bandwidth)`}
+              onChange={(v) => updateBand(band.id, { q: v })}
+            />
+          </label>
+        </div>
+      ) : (
+        <div aria-hidden="true" />
+      )}
 
       {showRemove ? (
         <button
@@ -162,6 +303,8 @@ function BandRow({ band, index, showRemove }: { band: EQBand; index: number; sho
     </div>
   );
 }
+
+// ── EQBandControl ─────────────────────────────────────────────────────────────
 
 export function EQBandControl() {
   const { bands, addBand, resetGains, eqBypassed, setEQBypassed, preampGain, setPreampGain, engineRef, isEngineReady } = useAppContext();

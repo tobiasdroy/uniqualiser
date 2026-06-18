@@ -62,7 +62,7 @@ export function EQCurve() {
       if (!drag || !svgRef.current) return;
       const rect = svgRef.current.getBoundingClientRect();
       const newFreq = Math.max(20, Math.min(20000, xToFreq(e.clientX - rect.left, width)));
-      const newGain = Math.max(-24, Math.min(24, yToDb(e.clientY - rect.top, SVG_HEIGHT)));
+      const newGain = Math.max(-18, Math.min(18, yToDb(e.clientY - rect.top, SVG_HEIGHT)));
       updateBand(drag.id, { frequency: Math.round(newFreq), gain: parseFloat(newGain.toFixed(1)) });
     },
     [width, updateBand],
@@ -89,11 +89,11 @@ export function EQCurve() {
           break;
         case 'ArrowUp':
           e.preventDefault();
-          updateBand(band.id, { gain: Math.min(24, parseFloat((band.gain + gainStep).toFixed(1))) });
+          updateBand(band.id, { gain: Math.min(18, parseFloat((band.gain + gainStep).toFixed(1))) });
           break;
         case 'ArrowDown':
           e.preventDefault();
-          updateBand(band.id, { gain: Math.max(-24, parseFloat((band.gain - gainStep).toFixed(1))) });
+          updateBand(band.id, { gain: Math.max(-18, parseFloat((band.gain - gainStep).toFixed(1))) });
           break;
       }
     },
@@ -180,8 +180,8 @@ export function EQCurve() {
                 role="slider"
                 aria-label={label}
                 aria-valuenow={band.gain}
-                aria-valuemin={-24}
-                aria-valuemax={24}
+                aria-valuemin={-18}
+                aria-valuemax={18}
                 aria-valuetext={`${band.gain > 0 ? '+' : ''}${band.gain} dB at ${formatFrequency(band.frequency)} Hz`}
               />
               <circle cx={x} cy={y} r={5} className={styles.handle} aria-hidden="true" />
