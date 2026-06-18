@@ -329,4 +329,4 @@ Local-only processing. No data leaves the browser. One-line notice in the footer
 
 ## GitHub
 
-Repository: `https://github.com/tobiasdroy/personalised-eq`
+Repository: `https://github.com/tobiasdroy/uniqualiser`
