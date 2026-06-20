@@ -18,14 +18,24 @@ const SVG_HEIGHT = 280;
 
 interface DragState {
   id: string;
+  mode: 'freq-gain' | 'q-left' | 'q-right';
+  bandFreq: number;
+}
+
+// Edge frequencies for a Peak band's bandwidth visualisation.
+// f_low = f0 * 2^(-1/(2Q)),  f_high = f0 * 2^(1/(2Q))
+function bwEdges(freq: number, q: number): [number, number] {
+  const half = 1 / (2 * q);
+  return [freq * Math.pow(2, -half), freq * Math.pow(2, half)];
 }
 
 export function EQCurve() {
-  const { bands, updateBand, engineRef, isEngineReady, eqBypassed } = useAppContext();
+  const { bands, updateBand, engineRef, isEngineReady, eqBypassed, hoveredBandIndex, setHoveredBandIndex } = useAppContext();
   const svgRef = useRef<SVGSVGElement>(null);
   const [width, setWidth] = useState(800);
   const [combinedPath, setCombinedPath] = useState('');
   const [bandPaths, setBandPaths] = useState<string[]>([]);
+  const [focusedBandIndex, setFocusedBandIndex] = useState<number | null>(null);
   const dragRef = useRef<DragState | null>(null);
 
   useEffect(() => {
@@ -50,20 +60,43 @@ export function EQCurve() {
     setBandPaths(filterNodes.map((n) => buildBandPath(n, width, SVG_HEIGHT)));
   }, [bands, width, engineRef, isEngineReady]);
 
-  // Pointer drag
+  // ── Freq/gain drag ───────────────────────────────────────────────────────────
+
   const onPointerDown = useCallback((e: React.PointerEvent<SVGCircleElement>, band: EQBand) => {
     e.currentTarget.setPointerCapture(e.pointerId);
-    dragRef.current = { id: band.id };
+    dragRef.current = { id: band.id, mode: 'freq-gain', bandFreq: band.frequency };
   }, []);
+
+  // ── Q-handle drag ────────────────────────────────────────────────────────────
+
+  const onQHandleDown = useCallback((e: React.PointerEvent<SVGCircleElement>, band: EQBand, side: 'left' | 'right') => {
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragRef.current = { id: band.id, mode: side === 'left' ? 'q-left' : 'q-right', bandFreq: band.frequency };
+  }, []);
+
+  // ── Unified pointer-move (both drag modes bubble up to SVG) ─────────────────
 
   const onPointerMove = useCallback(
     (e: React.PointerEvent<SVGSVGElement>) => {
       const drag = dragRef.current;
       if (!drag || !svgRef.current) return;
       const rect = svgRef.current.getBoundingClientRect();
-      const newFreq = Math.max(20, Math.min(20000, xToFreq(e.clientX - rect.left, width)));
-      const newGain = Math.max(-18, Math.min(18, yToDb(e.clientY - rect.top, SVG_HEIGHT)));
-      updateBand(drag.id, { frequency: Math.round(newFreq), gain: parseFloat(newGain.toFixed(1)) });
+
+      if (drag.mode === 'freq-gain') {
+        const newFreq = Math.max(20, Math.min(20000, xToFreq(e.clientX - rect.left, width)));
+        const newGain = Math.max(-18, Math.min(18, yToDb(e.clientY - rect.top, SVG_HEIGHT)));
+        updateBand(drag.id, { frequency: Math.round(newFreq), gain: parseFloat(newGain.toFixed(1)) });
+      } else {
+        // Q drag: derive Q from how far the dragged edge is from the centre frequency.
+        // Q = 1 / (2 * log2(f_edge / f0))  for the right edge (or f0/f_edge for left).
+        const f_drag = xToFreq(e.clientX - rect.left, width);
+        const f0 = drag.bandFreq;
+        const ratio = drag.mode === 'q-left' ? f0 / f_drag : f_drag / f0;
+        if (ratio <= 1) return; // dragged past centre — ignore
+        const newQ = Math.max(0.1, Math.min(10, 1 / (2 * Math.log2(ratio))));
+        updateBand(drag.id, { q: parseFloat(newQ.toFixed(2)) });
+      }
     },
     [width, updateBand],
   );
@@ -72,7 +105,8 @@ export function EQCurve() {
     dragRef.current = null;
   }, []);
 
-  // Keyboard navigation on handles: arrows adjust freq/gain; Shift = larger step
+  // ── Keyboard navigation on main handles ─────────────────────────────────────
+
   const onHandleKeyDown = useCallback(
     (e: React.KeyboardEvent<SVGCircleElement>, band: EQBand) => {
       const gainStep = e.shiftKey ? 2 : 0.5;
@@ -162,29 +196,87 @@ export function EQCurve() {
           </>
         )}
 
-        {/* Draggable + keyboard-navigable handles */}
+        {/* Per-band handles (and bandwidth overlay on hover) */}
         {bands.map((band, index) => {
           const x = freqToX(band.frequency, width);
           const y = dBToY(band.gain, SVG_HEIGHT);
-          const label = `Band ${index + 1}: ${formatFrequency(band.frequency)} Hz, ${band.gain > 0 ? '+' : ''}${band.gain} dB. Arrow keys adjust frequency and gain. Hold Shift for larger steps.`;
+          const isHovered = hoveredBandIndex === index;
+          const showBW = isHovered && band.type === 'PK';
+          const [fLow, fHigh] = bwEdges(band.frequency, band.q);
+          const xLow = freqToX(Math.max(20, fLow), width);
+          const xHigh = freqToX(Math.min(20000, fHigh), width);
+          const qMidY = SVG_HEIGHT / 2;
+
+          const handleLabel = `Band ${index + 1}: ${formatFrequency(band.frequency)} Hz, ${band.gain > 0 ? '+' : ''}${band.gain} dB. Arrow keys adjust frequency and gain. Hold Shift for larger steps.`;
+
           return (
-            <g key={band.id}>
+            <g
+              key={band.id}
+              onMouseEnter={() => setHoveredBandIndex(index)}
+              onMouseLeave={() => setHoveredBandIndex(null)}
+            >
+              {showBW && (
+                <>
+                  {/* Shaded bandwidth region */}
+                  <rect
+                    x={xLow}
+                    y={0}
+                    width={Math.max(0, xHigh - xLow)}
+                    height={SVG_HEIGHT}
+                    className={styles.bwRegion}
+                    aria-hidden="true"
+                  />
+
+                  {/* Left Q edge */}
+                  <line x1={xLow} y1={0} x2={xLow} y2={SVG_HEIGHT} className={styles.qLine} aria-hidden="true" />
+                  <circle
+                    cx={xLow}
+                    cy={qMidY}
+                    r={8}
+                    className={styles.qHandleHit}
+                    onPointerDown={(e) => onQHandleDown(e, band, 'left')}
+                    aria-label={`Band ${index + 1} Q — drag left edge to widen or narrow`}
+                  />
+                  <circle cx={xLow} cy={qMidY} r={3.5} className={styles.qHandle} aria-hidden="true" />
+
+                  {/* Right Q edge */}
+                  <line x1={xHigh} y1={0} x2={xHigh} y2={SVG_HEIGHT} className={styles.qLine} aria-hidden="true" />
+                  <circle
+                    cx={xHigh}
+                    cy={qMidY}
+                    r={8}
+                    className={styles.qHandleHit}
+                    onPointerDown={(e) => onQHandleDown(e, band, 'right')}
+                    aria-label={`Band ${index + 1} Q — drag right edge to widen or narrow`}
+                  />
+                  <circle cx={xHigh} cy={qMidY} r={3.5} className={styles.qHandle} aria-hidden="true" />
+                </>
+              )}
+
+              {/* SVG focus ring — moves with the handle, no CSS outline artifacts */}
+              {focusedBandIndex === index && (
+                <circle cx={x} cy={y} r={11} className={styles.focusRing} aria-hidden="true" />
+              )}
+
+              {/* Main freq/gain handle (on top so it takes precedence at the centre) */}
               <circle
                 cx={x}
                 cy={y}
                 r={16}
-                className={styles.handleHit}
+                className={`${styles.handleHit} ${isHovered ? styles.handleHitHovered : ''}`}
                 onPointerDown={(e) => onPointerDown(e, band)}
                 onKeyDown={(e) => onHandleKeyDown(e, band)}
+                onFocus={() => setFocusedBandIndex(index)}
+                onBlur={() => setFocusedBandIndex(null)}
                 tabIndex={0}
                 role="slider"
-                aria-label={label}
+                aria-label={handleLabel}
                 aria-valuenow={band.gain}
                 aria-valuemin={-18}
                 aria-valuemax={18}
                 aria-valuetext={`${band.gain > 0 ? '+' : ''}${band.gain} dB at ${formatFrequency(band.frequency)} Hz`}
               />
-              <circle cx={x} cy={y} r={5} className={styles.handle} aria-hidden="true" />
+              <circle cx={x} cy={y} r={5} className={`${styles.handle} ${isHovered ? styles.handleHovered : ''}`} aria-hidden="true" />
             </g>
           );
         })}

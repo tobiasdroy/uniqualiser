@@ -72,6 +72,25 @@ function magnitudesToPath(magnitudes: Float32Array, width: number, height: numbe
   return d;
 }
 
+// Returns the peak dB of the combined EQ response across the log-frequency axis.
+// Used to compute how much preamp reduction is needed to avoid clipping.
+export function computePeakGainDb(filterNodes: BiquadFilterNode[]): number {
+  if (filterNodes.length === 0) return 0;
+  const mag = new Float32Array(CURVE_POINTS);
+  const phase = new Float32Array(CURVE_POINTS);
+  const combined = new Float32Array(CURVE_POINTS).fill(1.0);
+  for (const node of filterNodes) {
+    node.getFrequencyResponse(FREQ_ARRAY, mag, phase);
+    for (let i = 0; i < CURVE_POINTS; i++) combined[i] *= mag[i];
+  }
+  let peak = -Infinity;
+  for (let i = 0; i < CURVE_POINTS; i++) {
+    const db = 20 * Math.log10(Math.max(combined[i], 1e-10));
+    if (db > peak) peak = db;
+  }
+  return peak;
+}
+
 // Returns the mean dB of the combined EQ response across the log-frequency axis.
 // Positive = net boost, negative = net cut. Average is log-frequency weighted,
 // which gives perceptual weighting (biased toward the 1–4 kHz sensitivity peak).

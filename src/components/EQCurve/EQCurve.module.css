@@ -85,9 +85,14 @@
 }
 
 .handleHit:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 4px;
-  border-radius: 50%;
+  outline: none;
+}
+
+.focusRing {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  pointer-events: none;
 }
 
 .handle {
@@ -95,14 +100,46 @@
   stroke: var(--bg-primary);
   stroke-width: 2;
   pointer-events: none;
+  transition: r 0.1s;
 }
 
-/* A/B bypass: dim curves and handles to show EQ is inactive */
-.bypassed .bandCurve,
-.bypassed .curveGlow,
-.bypassed .curve,
+.handleHovered {
+  r: 7px;
+}
+
+/* Bandwidth region shown on handle hover (Peak bands only) */
+.bwRegion {
+  fill: var(--eq-curve);
+  opacity: 0.07;
+}
+
+.qLine {
+  stroke: var(--eq-curve);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.qHandleHit {
+  fill: transparent;
+  cursor: ew-resize;
+}
+
+.qHandle {
+  fill: var(--eq-curve);
+  stroke: var(--bg-primary);
+  stroke-width: 1.5;
+  pointer-events: none;
+}
+
+/* A/B bypass: grey out curves and disable handles to show EQ is inactive */
+.bypassed .svg {
+  filter: grayscale(1);
+  opacity: 0.35;
+}
+
 .bypassed .handle,
 .bypassed .handleHit {
-  opacity: 0.2;
   pointer-events: none;
 }

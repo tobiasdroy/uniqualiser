@@ -1,7 +1,7 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import * as SliderPrimitive from '@radix-ui/react-slider';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Square, Waves } from 'lucide-react';
+import { Play, Square, Waves, Volume2 } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { useSweep } from '../../hooks/useSweep';
 import styles from './OscillatorControl.module.css';
@@ -40,6 +40,7 @@ export function OscillatorControl() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [frequency, setFrequency] = useState(1000);
   const [sweepDuration, setSweepDuration] = useState<number>(30);
+  const [oscVolume, setOscVolume] = useState(-12);
   const { isSweeping, progress, startSweep, stopSweep } = useSweep(engineRef);
 
   const handleSliderChange = useCallback(
@@ -58,7 +59,7 @@ export function OscillatorControl() {
     const engine = engineRef.current!;
     if (isPlaying) {
       if (isSweeping) stopSweep();
-      engine.stopOscillator();
+      engine.stopOscillatorFaded();
       setIsPlaying(false);
     } else {
       await engine.startOscillator(frequency);
@@ -79,6 +80,22 @@ export function OscillatorControl() {
     }
     startSweep({ startFreq: 20, endFreq: 20000, duration: sweepDuration });
   }, [isEngineReady, initEngine, engineRef, isSweeping, isPlaying, startSweep, stopSweep, sweepDuration]);
+
+  useEffect(() => {
+    if (isEngineReady && engineRef.current) {
+      engineRef.current.setOscillatorGain(Math.pow(10, oscVolume / 20));
+    }
+  }, [isEngineReady, engineRef, oscVolume]);
+
+  const handleVolumeChange = useCallback(
+    ([v]: number[]) => {
+      setOscVolume(v);
+      if (engineRef.current) {
+        engineRef.current.setOscillatorGain(Math.pow(10, v / 20));
+      }
+    },
+    [engineRef],
+  );
 
   const displayFreq = isSweeping
     ? Math.pow(10, LOG_MIN + progress * (LOG_MAX - LOG_MIN))
@@ -221,6 +238,32 @@ export function OscillatorControl() {
             <Waves size={14} strokeWidth={2} />
             {isSweeping ? 'Stop Sweep' : 'Auto Sweep'}
           </button>
+        </div>
+
+        <div className={styles.volumeInline}>
+          <Volume2 size={14} strokeWidth={2} color="var(--text-secondary)" aria-hidden="true" />
+          <SliderPrimitive.Root
+            className={`${styles.sliderRoot} ${styles.volumeSlider}`}
+            min={-40}
+            max={0}
+            step={1}
+            value={[oscVolume]}
+            onValueChange={handleVolumeChange}
+            aria-label="Oscillator volume"
+          >
+            <SliderPrimitive.Track className={styles.sliderTrack}>
+              <SliderPrimitive.Range className={styles.sliderRange} />
+            </SliderPrimitive.Track>
+            <SliderPrimitive.Thumb
+              className={styles.sliderThumb}
+              aria-label="Oscillator volume"
+              aria-valuemin={-40}
+              aria-valuemax={0}
+              aria-valuenow={oscVolume}
+              aria-valuetext={`${oscVolume} dB`}
+            />
+          </SliderPrimitive.Root>
+          <span className={styles.volumeValue}>{oscVolume} dB</span>
         </div>
       </div>
     </section>

@@ -236,11 +236,16 @@
   padding: 10px 12px;
   background: var(--bg-elevated);
   border-radius: 8px;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, background 0.12s, box-shadow 0.12s;
 }
 
 .row.disabled {
   opacity: 0.4;
+}
+
+.row.highlighted {
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-elevated));
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .enableToggle {

@@ -179,13 +179,14 @@ function NumberInput({
 // ── BandRow ───────────────────────────────────────────────────────────────────
 
 function BandRow({ band, index, showRemove }: { band: EQBand; index: number; showRemove: boolean }) {
-  const { updateBand, removeBand } = useAppContext();
+  const { updateBand, removeBand, hoveredBandIndex } = useAppContext();
   const n = index + 1;
   const showQ = band.type === 'PK';
+  const isHighlighted = hoveredBandIndex === index;
 
   return (
     <div
-      className={`${styles.row} ${!band.enabled ? styles.disabled : ''}`}
+      className={`${styles.row} ${!band.enabled ? styles.disabled : ''} ${isHighlighted ? styles.highlighted : ''}`}
       role="group"
       aria-label={`EQ band ${n}`}
     >
@@ -367,14 +368,14 @@ export function EQBandControl() {
               Level Match
             </button>
           </Tip>
-          <Tip label="Bypass EQ to compare flat response">
+          <Tip label={eqBypassed ? 'Restore EQ' : 'Bypass EQ to compare flat response'}>
             <button
               className={`${styles.abBtn} ${eqBypassed ? styles.abActive : ''}`}
               onClick={() => setEQBypassed(!eqBypassed)}
               aria-pressed={eqBypassed}
-              aria-label={eqBypassed ? 'A/B: EQ bypassed — click to restore' : 'A/B: EQ active — click to bypass'}
+              aria-label={eqBypassed ? 'EQ bypassed — click to restore' : 'Bypass EQ — click to compare flat response'}
             >
-              {eqBypassed ? 'Bypass' : 'A/B Compare'}
+              {eqBypassed ? 'Bypassed' : 'Bypass'}
             </button>
           </Tip>
         </div>

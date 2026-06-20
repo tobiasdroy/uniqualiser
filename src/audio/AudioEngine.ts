@@ -26,7 +26,9 @@ export class AudioEngine {
   private fileEQEnabled = true;
   private eqBypassed = false;
   private preampLinear = 1.0;
+  private oscGainLinear = Math.pow(10, -12 / 20);
   private sweepTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private oscFadeTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   init(): void {
     if (this.ctx) return;
@@ -34,6 +36,7 @@ export class AudioEngine {
     this.ctx = new AudioContext();
 
     this.oscGainNode = this.ctx.createGain();
+    this.oscGainNode.gain.value = this.oscGainLinear;
     this.fileGainNode = this.ctx.createGain();
     this.masterGainNode = this.ctx.createGain();
     this.analyserNode = this.ctx.createAnalyser();
@@ -149,7 +152,13 @@ export class AudioEngine {
     await this.resumeContext();
     // Restore master gain in case panic() was previously called
     this.masterGainNode?.gain.setValueAtTime(this.preampLinear, this.ctx.currentTime);
-    this.stopOscillator();
+    this.stopOscillator(); // immediate stop of any previous osc
+
+    // Fade in from silence to avoid click
+    const now = this.ctx.currentTime;
+    this.oscGainNode.gain.cancelScheduledValues(now);
+    this.oscGainNode.gain.setValueAtTime(0, now);
+    this.oscGainNode.gain.linearRampToValueAtTime(this.oscGainLinear, now + 0.008);
 
     const osc = this.ctx.createOscillator();
     osc.type = 'sine';
@@ -160,10 +169,53 @@ export class AudioEngine {
   }
 
   stopOscillator(): void {
+    // Cancel any pending fade-out before doing an immediate stop
+    if (this.oscFadeTimeoutId !== null) {
+      clearTimeout(this.oscFadeTimeoutId);
+      this.oscFadeTimeoutId = null;
+    }
+    if (this.oscGainNode && this.ctx) {
+      this.oscGainNode.gain.cancelScheduledValues(this.ctx.currentTime);
+      this.oscGainNode.gain.setValueAtTime(this.oscGainLinear, this.ctx.currentTime);
+    }
     if (this.currentOscillator) {
       try { this.currentOscillator.stop(); } catch { /* already stopped */ }
       this.currentOscillator.disconnect();
       this.currentOscillator = null;
+    }
+  }
+
+  // Fade out over 8 ms before stopping — call this for user-initiated stops.
+  stopOscillatorFaded(): void {
+    if (!this.ctx || !this.currentOscillator || !this.oscGainNode) {
+      this.stopOscillator();
+      return;
+    }
+    const fadeDuration = 0.008;
+    const now = this.ctx.currentTime;
+    this.oscGainNode.gain.cancelScheduledValues(now);
+    this.oscGainNode.gain.setValueAtTime(this.oscGainNode.gain.value, now);
+    this.oscGainNode.gain.linearRampToValueAtTime(0, now + fadeDuration);
+
+    const osc = this.currentOscillator;
+    this.currentOscillator = null;
+    this.oscFadeTimeoutId = setTimeout(() => {
+      this.oscFadeTimeoutId = null;
+      try { osc.stop(); } catch { /* already stopped */ }
+      osc.disconnect();
+      // Restore gain so the next startOscillator sees a clean state
+      if (this.oscGainNode && this.ctx) {
+        this.oscGainNode.gain.cancelScheduledValues(this.ctx.currentTime);
+        this.oscGainNode.gain.setValueAtTime(this.oscGainLinear, this.ctx.currentTime);
+      }
+    }, fadeDuration * 1000 + 5);
+  }
+
+  setOscillatorGain(linear: number): void {
+    this.oscGainLinear = linear;
+    if (this.oscGainNode && this.ctx) {
+      this.oscGainNode.gain.cancelScheduledValues(this.ctx.currentTime);
+      this.oscGainNode.gain.setValueAtTime(linear, this.ctx.currentTime);
     }
   }
 
@@ -372,6 +424,7 @@ export class AudioEngine {
   }
 
   destroy(): void {
+    if (this.oscFadeTimeoutId !== null) clearTimeout(this.oscFadeTimeoutId);
     this.stopOscillator();
     this.stopFile();
     this.ctx?.close();

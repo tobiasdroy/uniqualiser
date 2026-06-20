@@ -4,6 +4,7 @@ import type { EQBand, EQProfile } from '../types';
 import type { AudioEngine } from '../audio/AudioEngine';
 import { useAudioEngine } from '../hooks/useAudioEngine';
 import { useEQBands } from '../hooks/useEQBands';
+import { computePeakGainDb } from '../audio/frequencyMath';
 
 interface AppContextValue {
   engineRef: RefObject<AudioEngine | null>;
@@ -20,6 +21,8 @@ interface AppContextValue {
   setPreampGain: (gain: number) => void;
   eqBypassed: boolean;
   setEQBypassed: (bypassed: boolean) => void;
+  hoveredBandIndex: number | null;
+  setHoveredBandIndex: (i: number | null) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -29,6 +32,7 @@ export function AppProvider({ children, safetyAccepted }: { children: ReactNode;
   const { bands, preampGain, addBand, removeBand, updateBand, resetGains, loadProfile, setPreampGain } =
     useEQBands(engineRef);
   const [eqBypassed, setEQBypassedState] = useState(false);
+  const [hoveredBandIndex, setHoveredBandIndex] = useState<number | null>(null);
 
   const setEQBypassed = useCallback(
     (bypassed: boolean) => {
@@ -36,6 +40,38 @@ export function AppProvider({ children, safetyAccepted }: { children: ReactNode;
       setEQBypassedState(bypassed);
     },
     [engineRef],
+  );
+
+  // After any band mutation, pull the peak from the live filter nodes and reduce
+  // the preamp to compensate, preventing digital clipping from boosts.
+  const applyAutoPreamp = useCallback(() => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    const peakDb = computePeakGainDb(engine.getFilterNodes());
+    const compensation = -Math.max(0, peakDb);
+    const rounded = Math.round(compensation * 10) / 10;
+    setPreampGain(rounded);
+  }, [engineRef, setPreampGain]);
+
+  const updateBandAuto = useCallback(
+    (id: string, patch: Partial<EQBand>) => { updateBand(id, patch); applyAutoPreamp(); },
+    [updateBand, applyAutoPreamp],
+  );
+  const addBandAuto = useCallback(
+    () => { addBand(); applyAutoPreamp(); },
+    [addBand, applyAutoPreamp],
+  );
+  const removeBandAuto = useCallback(
+    (id: string) => { removeBand(id); applyAutoPreamp(); },
+    [removeBand, applyAutoPreamp],
+  );
+  const resetGainsAuto = useCallback(
+    () => { resetGains(); applyAutoPreamp(); },
+    [resetGains, applyAutoPreamp],
+  );
+  const loadProfileAuto = useCallback(
+    (profile: EQProfile) => { loadProfile(profile); applyAutoPreamp(); },
+    [loadProfile, applyAutoPreamp],
   );
 
   return (
@@ -47,14 +83,16 @@ export function AppProvider({ children, safetyAccepted }: { children: ReactNode;
         panic,
         bands,
         preampGain,
-        addBand,
-        removeBand,
-        updateBand,
-        resetGains,
-        loadProfile,
+        addBand: addBandAuto,
+        removeBand: removeBandAuto,
+        updateBand: updateBandAuto,
+        resetGains: resetGainsAuto,
+        loadProfile: loadProfileAuto,
         setPreampGain,
         eqBypassed,
         setEQBypassed,
+        hoveredBandIndex,
+        setHoveredBandIndex,
       }}
     >
       {children}

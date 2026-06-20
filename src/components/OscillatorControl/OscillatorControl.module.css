@@ -211,7 +211,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1;
 }
 
 .durationPicker {
@@ -241,4 +240,26 @@
 .durationBtn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* ── Inline volume control ────────────────────────────────────────── */
+
+.volumeInline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.volumeSlider {
+  width: 100px;
+}
+
+.volumeValue {
+  font-size: 12px;
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  min-width: 42px;
+  text-align: right;
 }
