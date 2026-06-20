@@ -17,7 +17,7 @@ A guided wizard flow is planned (`/wizard` route) but not yet built. The archite
 - **`@radix-ui/react-slider`** — frequency and scrubber sliders (both use this instead of native `<input type="range">`)
 - **`@radix-ui/react-tooltip`** — tooltips on EQ band header buttons; `<Tooltip.Provider delayDuration={700}>` wraps the whole app in `App.tsx`
 - **`framer-motion`** — band row add/remove animations (`AnimatePresence`), sweep progress bar fade, audio transport entrance, page-load card stagger
-- **`lucide-react`** — icons throughout (Play, Square, Waves, RotateCcw, Plus, Pause, Music, FolderOpen, Download, Sun, Moon)
+- **`lucide-react`** — icons throughout (Play, Square, Waves, RotateCcw, Plus, X, Pause, Music, FolderOpen, Download, Sun, Moon, Volume2)
 
 ---
 
@@ -105,7 +105,7 @@ src/
 
 Sticky, blurred, `z-index: 100`. Contains:
 - **Logo** — "Uniqualiser" (32 px, links to `/`)
-- **Nav** — "How to use" button (opens `InstructionsModal`) + "Wizard" link (router link to `/wizard`)
+- **Nav** — "How to use" button (opens `InstructionsModal`). The Wizard link is intentionally hidden until the feature ships.
 - **Header right** — Dark/Light theme toggle + `ProfileManager` (import/export)
 
 ### InstructionsModal
@@ -221,6 +221,9 @@ The oscillator sits full-width at the top of the page. Key details:
 - **Tick axis** — ten log-spaced labels (20 → 20k) rendered in a `tickMarks` div below the slider root. `padding: 0 9px` compensates for the thumb's 9 px half-width so 0 %/100 % positions align with track endpoints. Edge labels use `data-anchor="left"/"right"` to avoid clipping.
 - **Frequency display** — an `<input type="text">` styled to look like a large read-only number. On focus it switches to a raw integer (e.g. `1115`); on blur or Enter it strips commas, clamps to 20–20,000, updates `frequency` state, moves the slider, and updates the oscillator pitch if playing. Escape reverts. The field is `readOnly` during a sweep.
 - **Progress bar** — wrapped in `AnimatePresence` for a fade in/out when sweep starts/stops.
+- **Volume slider** — Radix slider (−40 to 0 dB, default −12 dB) inline with the play/sweep controls. Maps to `engine.setOscillatorGain(linear)`. `oscGainLinear` is stored on the engine so fade in/out and gain changes don't clobber each other.
+- **Click prevention** — `startOscillator()` fades in over 8 ms (`linearRampToValueAtTime`). `stopOscillatorFaded()` fades out over 8 ms then stops the node in a `setTimeout`. `stopOscillator()` is the immediate version (used internally).
+- **Safari autoplay** — `handlePlayStop` and `handleSweep` always `await initEngine()` (first use) or `await engineRef.current!.resumeContext()` (subsequent uses) as the very first async op in the gesture handler.
 - **Layout** — `OscillatorControl` is the first card in `MainLayout`; the old two-column row (oscillator + audio player) was removed.
 
 ---
@@ -233,8 +236,10 @@ The oscillator sits full-width at the top of the page. Key details:
 - Per-band dimmed curves + a glowing combined curve (blurred duplicate path underneath).
 - Draggable handles: `setPointerCapture` for reliable drag-outside. Horizontal = frequency, vertical = gain.
 - Keyboard: arrow keys on focused handles adjust frequency (×1.05) and gain (±0.5 dB). Shift multiplies step.
+- **SVG focus ring** — rendered as a `<circle>` sibling inside the SVG at the handle coordinates (not CSS `outline`). CSS outline on SVG elements doesn't track `cx`/`cy` changes on arrow-key moves, leaving ring remnants. The `<circle>` follows the handle exactly.
+- **Hover interaction** — each band's `<g>` calls `setHoveredBandIndex` on mouseenter/leave (from `AppContext`). When hovered on a PK band: bandwidth shading (`bwRegion` rect), dashed Q boundary lines, and circular Q drag handles at `f_low`/`f_high` appear. Dragging a Q handle uses `Q = 1/(2 * log2(f_edge/f0))`. The `bandFreq` is stored in the drag ref to avoid adding `bands` to the callback deps.
 - `isEngineReady` is in the `useEffect` dependency array — without it the curve won't redraw after the engine initialises.
-- When `eqBypassed` is true the container gets `.bypassed` CSS class, which reduces curve/handle opacity to 0.2 and sets `pointer-events: none` on handles (drag is disabled during bypass).
+- When `eqBypassed` is true the container gets `.bypassed` CSS class: `filter: grayscale(1); opacity: 0.35` on the SVG, and `pointer-events: none` on handles (drag is disabled during bypass).
 
 ---
 
@@ -248,7 +253,9 @@ Filter type buttons display human-readable labels — **Peak** (PK), **Lo Shelf*
 
 Gain range is **±18 dB** (matching the EQ curve's visible ±18 dB axis). This limit is enforced in `EQBandControl`, `EQCurve` drag/keyboard handlers, and ARIA attributes.
 
-Bands: min 1, max 10. Add/remove buttons. Enable toggle per band (button labelled with band number, `aria-pressed`).
+Bands: min 1, max 10. Add/remove buttons. Enable toggle per band (button labelled with band number, `aria-pressed`). Remove buttons use `<X size={12} strokeWidth={2.5} />` from lucide-react (the `×` glyph had uneven metrics that prevented centring in the circle).
+
+**Bidirectional hover** — `hoveredBandIndex` in `AppContext` is set by both `BandRow` (mouseenter/leave) and the EQCurve band group (mouseenter/leave). Whichever fires sets the shared index; the other direction reacts to it. `BandRow` applies `.highlighted` (accent tint + left accent bar) when its index matches.
 
 ### Preamp row
 
@@ -260,7 +267,8 @@ All four buttons have Radix tooltips (via the local `Tip` helper in `EQBandContr
 
 - **Reset** — zeroes all band gains (frequencies, Q, and types are unchanged). Uses an inline two-step confirm: clicking "Reset" replaces the button in-place with "Reset all gains?" + Confirm + Cancel. No browser dialog. State is local to `EQBandControl` (`resetPending` boolean). `resetGains` lives in `useEQBands` as a `RESET_GAINS` reducer action.
 - **Level Match** — toggles `levelMatch` local state. When active (highlighted green), a `useEffect` in `EQBandControl` calls `computeAverageGainDb(filterNodes)` from `frequencyMath.ts` and sets `engine.setBypassTrim(10^(avgDb/20))`. This attenuates the flat bypass signal to match the EQ'd level — the EQ path is never modified, so there is no clipping risk. Recomputes automatically on every band change. `bypassTrimNode` is only in the bypass path, so when EQ is active the trim has no effect.
-- **A/B** — toggles `eqBypassed` in `AppContext`. When active (highlighted in accent colour, `aria-pressed=true`) the entire EQ filter chain and `eqMakeupGainNode` are bypassed in the audio graph and the EQ curve dims.
+- **Bypass** — toggles `eqBypassed` in `AppContext`. Button label is "Bypass" (EQ active) / "Bypassed" (EQ off). When active: the full filter chain is bypassed in the audio graph; the EQ curve goes full grayscale (`grayscale(1)`, opacity 0.35); the preamp row, band list, and bottom bar also desaturate (`grayscale(1)`, opacity 0.5) — but the header action buttons stay at full colour (`.bypassed` scoped selectors exclude `.header`).
+- **Auto-preamp** — `AppContext` wraps `updateBand`, `addBand`, `removeBand`, `resetGains`, and `loadProfile` with an `applyAutoPreamp()` call after every mutation. `applyAutoPreamp` calls `computePeakGainDb(filterNodes)` from `frequencyMath.ts` (multiplies all filter responses across 512 log-spaced points, finds the max) and sets preamp to `−max(0, peakDb)`, rounded to 1 decimal.
 - **Add Band** — adds a new band (disabled at 10).
 
 ---
@@ -283,10 +291,10 @@ Filter 2: ON LSC Fc 80 Hz Gain -2 dB Q 0.71
 
 `SafetyModal` blocks the entire UI until accepted. Two modes:
 
-- `'gate'` — checkbox + "Get started" button. Displayed on first visit.
+- `'gate'` — checkbox + "Get started" button. Displayed on **every** page load (not just first visit — `safetyAccepted` always initialises as `false`, no localStorage read). This guarantees a user gesture before any `AudioContext` is created, satisfying Safari's autoplay policy.
 - `'review'` — "Close" button only. Opened from a "Safety Notice" link in the footer.
 
-Acceptance is stored in `localStorage` under `eq-safety-accepted`. The `AudioEngine` is not initialised (no `AudioContext` created) until acceptance. The app root has `aria-hidden` while the modal is open.
+The `AudioEngine` is not initialised (no `AudioContext` created) until acceptance. The app root has `aria-hidden` while the modal is open. The old `eq-safety-accepted` localStorage key is no longer written or read.
 
 The modal has a focus trap. Content is friendly and concise (~80 words): intro, a "turn your volume down" action card, and four bullets covering risk/liability, no medical use, under-18 restriction.
 
@@ -299,6 +307,8 @@ The modal has a focus trap. Content is friendly and concise (~80 words): intro, 
 ### Privacy Policy
 
 Local-only processing. No data leaves the browser. One-line notice in the footer. The **Privacy Policy** modal (opened via footer link) documents compliance with UK GDPR / DUAA, EU GDPR (Article 6 & 9), US state health privacy laws (Washington MHMDA), COPPA, and the EU AI Act. The modal heading and footer button are both labelled "Privacy Policy".
+
+The footer also contains a **Feedback** link (`mailto:tobias.droy@gmail.com?subject=Uniqualiser%20feedback`) for bug reports and feature suggestions.
 
 ### Accessibility (WCAG 2.2 AA)
 
@@ -315,7 +325,7 @@ Local-only processing. No data leaves the browser. One-line notice in the footer
 
 ## Known gotchas
 
-- `AudioContext` starts suspended; must call `resumeContext()` inside `startOscillator()` / `startFile()` before playing.
+- `AudioContext` starts suspended (and can enter `'interrupted'` on iOS when app loses focus). `resumeContext()` checks `state !== 'running'` (not just `=== 'suspended'`) and must be called and **awaited** as the very first async op inside the user gesture handler — before any state updates or other async work — otherwise Safari rejects it.
 - EQCurve's `useEffect` **must** include `isEngineReady` in its dependency array, otherwise the curve stays flat on first render (engine initialises after the effect runs).
 - When `setBandEnabled(false)` is called, gain is set to 0. `setBandEnabled(true, restoreGain)` must receive the band's actual gain value to restore it — `useEQBands.updateBand` passes this automatically.
 - `frequencyMath.ts` uses shared module-level `MAG_BUF` / `PHASE_BUF` buffers. These are not thread-safe, but Web Audio runs on the main thread so this is fine.
