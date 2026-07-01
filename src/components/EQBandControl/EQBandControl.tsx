@@ -7,6 +7,18 @@ import { computeAverageGainDb } from '../../audio/frequencyMath';
 import type { EQBand, FilterType } from '../../types';
 import styles from './EQBandControl.module.css';
 
+// Exact Q ↔ bandwidth conversion (bandwidth in octaves)
+// BW = 2/ln(2) · arcsinh(1/(2Q))   ←→   Q = 1/(2·sinh(BW·ln(2)/2))
+function qToBw(q: number): number {
+  return parseFloat(((2 / Math.LN2) * Math.asinh(1 / (2 * q))).toFixed(2));
+}
+function bwToQ(bw: number): number {
+  const q = 1 / (2 * Math.sinh((bw * Math.LN2) / 2));
+  return parseFloat(Math.max(0.1, Math.min(10, q)).toFixed(3));
+}
+const BW_MIN = 0.14; // ≈ Q 10
+const BW_MAX = 6.7;  // ≈ Q 0.1
+
 const FILTER_LABELS: Record<FilterType, string> = { PK: 'Peak', LSC: 'Lo Shelf', HSC: 'Hi Shelf' };
 const FILTER_TYPES: FilterType[] = ['PK', 'LSC', 'HSC'];
 
@@ -178,11 +190,17 @@ function NumberInput({
 
 // ── BandRow ───────────────────────────────────────────────────────────────────
 
-function BandRow({ band, index, showRemove }: { band: EQBand; index: number; showRemove: boolean }) {
+function BandRow({ band, index, showRemove, bwMode }: { band: EQBand; index: number; showRemove: boolean; bwMode: boolean }) {
   const { updateBand, removeBand, hoveredBandIndex, setHoveredBandIndex } = useAppContext();
   const n = index + 1;
   const showQ = band.type === 'PK';
   const isHighlighted = hoveredBandIndex === index;
+
+  const qKnobValue = bwMode ? qToBw(band.q) : band.q;
+  const qKnobMin   = bwMode ? BW_MIN : 0.1;
+  const qKnobMax   = bwMode ? BW_MAX : 10;
+  const qKnobLabel = bwMode ? `Band ${n} bandwidth in octaves` : `Band ${n} Q factor (bandwidth)`;
+  const handleQChange = (v: number) => updateBand(band.id, { q: bwMode ? bwToQ(v) : v });
 
   return (
     <div
@@ -267,25 +285,26 @@ function BandRow({ band, index, showRemove }: { band: EQBand; index: number; sho
       {showQ ? (
         <div className={styles.paramGroup}>
           <Knob
-            value={band.q}
-            min={0.1}
-            max={10}
+            value={qKnobValue}
+            min={qKnobMin}
+            max={qKnobMax}
             step={0.01}
             logScale
-            onChange={(v) => updateBand(band.id, { q: v })}
-            label={`Band ${n} Q`}
+            onChange={handleQChange}
+            label={bwMode ? `Band ${n} bandwidth` : `Band ${n} Q`}
           />
           <label className={styles.paramLabel}>
-            <span className={styles.paramName}>Q</span>
+            <span className={styles.paramName}>{bwMode ? 'BW' : 'Q'}</span>
             <NumberInput
-              value={band.q}
-              min={0.1}
-              max={10}
+              value={qKnobValue}
+              min={qKnobMin}
+              max={qKnobMax}
               step={0.01}
               className={styles.paramInput}
-              aria-label={`Band ${n} Q factor (bandwidth)`}
-              onChange={(v) => updateBand(band.id, { q: v })}
+              aria-label={qKnobLabel}
+              onChange={handleQChange}
             />
+            {bwMode && <span className={styles.paramUnit} aria-hidden="true">oct</span>}
           </label>
         </div>
       ) : (
@@ -313,6 +332,7 @@ export function EQBandControl() {
   const { bands, addBand, resetGains, eqBypassed, setEQBypassed, preampGain, setPreampGain, engineRef, isEngineReady } = useAppContext();
   const [resetPending, setResetPending] = useState(false);
   const [levelMatch, setLevelMatch] = useState(true);
+  const [bwMode, setBwMode] = useState(false);
 
   const handleResetConfirm = useCallback(() => {
     resetGains();
@@ -370,6 +390,16 @@ export function EQBandControl() {
               Level Match
             </button>
           </Tip>
+          <Tip label={bwMode ? 'Showing bandwidth in octaves — click for Q factor' : 'Showing Q factor — click for bandwidth in octaves'}>
+            <button
+              className={`${styles.levelBtn} ${bwMode ? styles.levelActive : ''}`}
+              onClick={() => setBwMode((v) => !v)}
+              aria-pressed={bwMode}
+              aria-label={bwMode ? 'BW mode: bandwidth in octaves — click for Q' : 'Q mode: Q factor — click for bandwidth in octaves'}
+            >
+              {bwMode ? 'BW' : 'Q'}
+            </button>
+          </Tip>
           <Tip label={eqBypassed ? 'Restore EQ' : 'Bypass EQ to compare flat response'}>
             <button
               className={`${styles.abBtn} ${eqBypassed ? styles.abActive : ''}`}
@@ -411,7 +441,7 @@ export function EQBandControl() {
               transition={{ duration: 0.15, ease: 'easeInOut' }}
               style={{ overflow: 'hidden' }}
             >
-              <BandRow band={band} index={i} showRemove={bands.length > 1} />
+              <BandRow band={band} index={i} showRemove={bands.length > 1} bwMode={bwMode} />
             </motion.div>
           ))}
         </AnimatePresence>
