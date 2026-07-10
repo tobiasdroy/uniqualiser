@@ -182,47 +182,53 @@ function HeroVisual() {
 
 function IntroCard() {
   return (
-    <section className={styles.introCard} aria-label="About Uniqualiser">
-      <div className={styles.introHero}>
-        <div className={styles.introHeroText}>
-          <h2 className={styles.introHeading}>Everyone's ears are different. Let's tune for yours.</h2>
-          <p className={styles.introLead}>
-            Uniqualiser is a free, browser-based tool for building a personalised parametric EQ profile
-            for your headphones — tuned to your hearing, not a measurement rig. You
-            sweep a tone across the audible range to find the peaks and dips unique to your ears, correct
-            them with a parametric equaliser, then verify the result using your own music.
-          </p>
+    <>
+      <section className={styles.introHero} aria-label="About Uniqualiser">
+        <div className={styles.introHeroInner}>
+          <div className={styles.introHeroText}>
+            <h2 className={styles.introHeading}>Everyone's ears are different. Let's tune for yours.</h2>
+            <p className={styles.introLead}>
+              Uniqualiser is a free, browser-based tool for building a personalised parametric EQ profile
+              for your headphones — tuned to your hearing, not a measurement rig's. You
+              sweep a tone across the audible range to find the peaks and dips unique to your ears, correct
+              them with a parametric equaliser, then verify the result using your own music.
+            </p>
+          </div>
+          <HeroVisual />
         </div>
-        <HeroVisual />
-      </div>
-      <h2 className={styles.introTitle}>Why personalise your EQ?</h2>
-      <div className={styles.introColumns}>
-        <div className={styles.introCol}>
-          <p className={styles.introBody}>
-            Tools like AutoEQ make it easy to apply a headphone correction curve against a measured
-            target. The catch is that your head-related transfer function (HRTF) — unique to your
-            ear and skull geometry — has a significant effect on how sound actually reaches your
-            eardrums. A profile derived from manufacturer measurements will sound quite different
-            depending on who's wearing the headphones.
-          </p>
+      </section>
+      <section className={styles.introWhy} aria-labelledby="why-personalise-heading">
+        <div className={styles.introWhyInner}>
+          <h2 id="why-personalise-heading" className={styles.introTitle}>Why personalise your EQ?</h2>
+          <div className={styles.introColumns}>
+            <div className={styles.introCol}>
+              <p className={styles.introBody}>
+                Tools like AutoEQ make it easy to apply a headphone correction curve against a measured
+                target. The catch is that your head-related transfer function (HRTF) — unique to your
+                ear and skull geometry — has a significant effect on how sound actually reaches your
+                eardrums. A profile derived from manufacturer measurements will sound quite different
+                depending on who's wearing the headphones.
+              </p>
+            </div>
+            <div className={styles.introCol}>
+              <p className={styles.introBody}>
+                HRTF variation is most pronounced above 1 kHz. A practical workflow is to apply an
+                AutoEQ correction for the bass and low-mids first, then use Uniqualiser to fine-tune
+                the upper frequencies by ear — until the oscillator sweep sounds even and flat to you.
+              </p>
+              <a
+                href="https://www.youtube.com/watch?v=s0nZCXyDTz4&t=299s"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.introLink}
+              >
+                Watch: The Headphone Show on the scale of this problem →
+              </a>
+            </div>
+          </div>
         </div>
-        <div className={styles.introCol}>
-          <p className={styles.introBody}>
-            HRTF variation is most pronounced above 1 kHz. A practical workflow is to apply an
-            AutoEQ correction for the bass and low-mids first, then use Uniqualiser to fine-tune
-            the upper frequencies by ear — until the oscillator sweep sounds even and flat to you.
-          </p>
-          <a
-            href="https://www.youtube.com/watch?v=s0nZCXyDTz4&t=299s"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.introLink}
-          >
-            Watch: The Headphone Show on the scale of this problem →
-          </a>
-        </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
 

@@ -58,6 +58,7 @@
 html,
 body {
   min-height: 100%;
+  overflow-x: hidden;
   background: var(--page-bg);
   background-image:
     radial-gradient(ellipse 70% 45% at 12% -8%, color-mix(in srgb, var(--accent) 10%, transparent) 0%, transparent 70%),

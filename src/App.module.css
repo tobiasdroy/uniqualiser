@@ -101,74 +101,89 @@
   background: rgba(185, 28, 28, 0.1);
 }
 
-/* ── Intro card ──────────────────────────────────────────────────────────── */
+/* ── "Why personalise" explainer — full-bleed, no card chrome ───────────── */
 
-.introCard {
+.introWhy {
+  position: relative;
+  left: 50%;
+  right: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  padding: 40px 32px 44px;
   background: var(--card-bg);
-  border-radius: 20px;
-  box-shadow: var(--shadow);
-  padding: 24px 28px;
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  border-bottom: 1px solid var(--border);
 }
 
-.introCard:hover {
-  transform: translateY(-3px);
-  box-shadow:
-    0 4px 8px rgba(0, 0, 0, 0.06),
-    0 16px 40px rgba(0, 0, 0, 0.09),
-    0 32px 80px rgba(0, 0, 0, 0.07);
+.introWhyInner {
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-/* ── Intro hero (top split: heading/lead/chips + decorative curve) ──────── */
+/* ── Intro hero (full-bleed landing band, breaks out of .main's 1200px column) ── */
 
 .introHero {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: 32px;
-  align-items: center;
-  padding-bottom: 24px;
-  margin-bottom: 24px;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  margin-top: -24px;
+  margin-bottom: 16px;
+  padding: 64px 32px 72px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 60% 70% at 12% 15%, color-mix(in srgb, var(--accent) 32%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 55% 60% at 90% 85%, color-mix(in srgb, var(--accent-secondary) 28%, transparent) 0%, transparent 65%),
+    var(--bg-secondary);
   border-bottom: 1px solid var(--border);
+}
+
+.introHero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.introHeroInner {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 48px;
+  align-items: center;
 }
 
 .introHeroText {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 18px;
+  max-width: 560px;
 }
 
 .introHeading {
-  font-size: 26px;
+  font-size: 38px;
   font-weight: var(--font-weight-medium);
   color: var(--text-primary);
-  letter-spacing: -0.3px;
-  line-height: 1.25;
+  letter-spacing: -0.6px;
+  line-height: 1.15;
 }
 
 .heroVisual {
   position: relative;
-  border-radius: 16px;
-  overflow: hidden;
-  aspect-ratio: 300 / 176;
-  background:
-    radial-gradient(circle at 22% 18%, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 60%),
-    radial-gradient(circle at 82% 82%, color-mix(in srgb, var(--accent-secondary) 14%, transparent) 0%, transparent 55%),
-    var(--bg-elevated);
-}
-
-.heroVisual::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
-  mix-blend-mode: overlay;
-  pointer-events: none;
+  aspect-ratio: 400 / 220;
 }
 
 .heroVisualSvg {
   width: 100%;
   height: 100%;
   display: block;
+  overflow: visible;
 }
 
 .heroGrid line {
@@ -205,17 +220,30 @@
 
 @media (max-width: 760px) {
   .introHero {
+    padding: 40px 16px 48px;
+  }
+
+  .introHeroInner {
     grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .introHeading {
+    font-size: 28px;
   }
 
   .heroVisual {
     aspect-ratio: 16 / 9;
   }
+
+  .introWhy {
+    padding: 28px 16px 32px;
+  }
 }
 
 .introLead {
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: 16px;
+  line-height: 1.65;
   color: var(--text-primary);
 }
 
