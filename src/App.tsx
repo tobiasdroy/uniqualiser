@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import { motion } from 'framer-motion';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, ArrowDown } from 'lucide-react';
 import { AppProvider } from './context/AppContext';
 import { EQCurve } from './components/EQCurve/EQCurve';
 import { EQBandControl } from './components/EQBandControl/EQBandControl';
@@ -165,15 +165,7 @@ function HeroVisual() {
           d="M -10 90 C 20 90, 40 44, 62 44 C 90 44, 130 152, 170 152 C 210 152, 235 76, 268 76 C 295 76, 320 92, 350 90"
         />
         {handles.map((h, i) => (
-          <motion.circle
-            key={i}
-            cx={h.cx}
-            cy={h.cy}
-            r="6"
-            className={styles.heroHandle}
-            animate={{ cy: [h.cy, h.cy - 4, h.cy] }}
-            transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut', delay: i * 0.4 }}
-          />
+          <circle key={i} cx={h.cx} cy={h.cy} r="6" className={styles.heroHandle} />
         ))}
       </svg>
     </div>
@@ -193,6 +185,10 @@ function IntroCard() {
               sweep a tone across the audible range to find the peaks and dips unique to your ears, correct
               them with a parametric equaliser, then verify the result using your own music.
             </p>
+            <a href="#oscillator" className={styles.heroCta}>
+              Get Started
+              <ArrowDown size={16} strokeWidth={2.5} />
+            </a>
           </div>
           <HeroVisual />
         </div>
@@ -241,7 +237,7 @@ function MainLayout() {
       <motion.div variants={cardVariants} initial="hidden" animate="visible" transition={{ duration: 0.2, ease: 'easeOut', delay: 0 }}>
         <IntroCard />
       </motion.div>
-      <motion.div variants={cardVariants} initial="hidden" animate="visible" transition={{ duration: 0.2, ease: 'easeOut', delay: 0.05 }}>
+      <motion.div id="oscillator" variants={cardVariants} initial="hidden" animate="visible" transition={{ duration: 0.2, ease: 'easeOut', delay: 0.05 }}>
         <OscillatorControl />
       </motion.div>
       <motion.div variants={cardVariants} initial="hidden" animate="visible" transition={{ duration: 0.2, ease: 'easeOut', delay: 0.1 }}>

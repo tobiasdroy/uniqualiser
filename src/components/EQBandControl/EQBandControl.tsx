@@ -332,6 +332,7 @@ export function EQBandControl() {
   const { bands, addBand, resetGains, eqBypassed, setEQBypassed, preampGain, setPreampGain, engineRef, isEngineReady } = useAppContext();
   const [resetPending, setResetPending] = useState(false);
   const [levelMatch, setLevelMatch] = useState(true);
+  const [levelMatchDb, setLevelMatchDb] = useState(0);
   const [bwMode, setBwMode] = useState(false);
 
   const handleResetConfirm = useCallback(() => {
@@ -351,7 +352,16 @@ export function EQBandControl() {
     const filterNodes = engineRef.current.getFilterNodes();
     const avgDb = computeAverageGainDb(filterNodes);
     engineRef.current.setBypassTrim(Math.pow(10, avgDb / 20));
-  }, [bands, levelMatch, isEngineReady, engineRef]);
+    // Displayed value includes preamp on top of the filter average: masterGainNode applies
+    // equally to both paths in-app (so it's irrelevant to the in-app bypass trim above), but
+    // it's exactly the extra gain a flat preset in external EQ software would need to match
+    // this profile's overall loudness against an unprocessed signal.
+    setLevelMatchDb(avgDb + preampGain);
+  }, [bands, levelMatch, preampGain, isEngineReady, engineRef]);
+
+  const levelMatchLabel = levelMatch
+    ? `Level Match (${levelMatchDb >= 0 ? '+' : ''}${levelMatchDb.toFixed(1)} dB)`
+    : 'Level Match';
 
   return (
     <section className={`${styles.container} ${eqBypassed ? styles.bypassed : ''}`} aria-label="Parametric EQ bands">
@@ -380,14 +390,18 @@ export function EQBandControl() {
               </button>
             </Tip>
           )}
-          <Tip label="Match loudness between EQ and bypass paths">
+          <Tip label="Match loudness between EQ and bypass paths — the dB shown is this profile's overall gain vs. an unprocessed signal">
             <button
               className={`${styles.levelBtn} ${levelMatch ? styles.levelActive : ''}`}
               onClick={() => setLevelMatch((v) => !v)}
               aria-pressed={levelMatch}
-              aria-label={levelMatch ? 'Level match on' : 'Level match off'}
+              aria-label={
+                levelMatch
+                  ? `Level match on. This profile is ${levelMatchDb.toFixed(1)} dB relative to an unprocessed signal`
+                  : 'Level match off'
+              }
             >
-              Level Match
+              {levelMatchLabel}
             </button>
           </Tip>
           <Tip label={eqBypassed ? 'Restore EQ' : 'Bypass EQ to compare flat response'}>
