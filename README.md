@@ -15,7 +15,7 @@ All processing is done client-side via the Web Audio API — no server, no data 
 - **Live EQ curve** — SVG frequency response computed in real time; drag handles to adjust frequency and gain directly on the curve; hover a handle to see bandwidth shading and drag the Q edges
 - **Bidirectional hover** — hovering a curve node highlights the corresponding EQ band row, and hovering a band row highlights the corresponding node on the curve
 - **Bypass** — toggle the entire EQ in and out with one button to compare your correction against the flat signal; the curve and band controls desaturate when bypassed to make the state unmistakable
-- **Level Match** — compensates the bypass path so the comparison is at equal perceived loudness (eliminates the "louder sounds better" bias)
+- **Level Match** — compensates the bypass path so the comparison is at equal perceived loudness (eliminates the "louder sounds better" bias); the button also shows this profile's total gain versus an unprocessed signal (e.g. `Level Match (-5.0 dB)`) — the exact offset to dial into a flat preset in other EQ software so it matches your profile's loudness
 - **Reset** — zero all band gains in one step (with confirmation)
 - **Audio file player** — upload any audio file; play/pause and scrub through the track to revisit specific sections with Bypass toggled on and off
 - **Import / Export** — standard APO Equalizer `.txt` format, compatible with most system-level EQ tools
@@ -56,7 +56,7 @@ Open [http://localhost:5173](http://localhost:5173).
 4. Where you hear a peak (louder than expected), add a negative gain correction on that band. Where you hear a trough, add positive gain.
 5. Use the rotary knobs, number inputs, or drag the handles directly on the curve to dial in Freq, Gain, and Q for each band; hover a handle to see bandwidth shading and drag the Q edges
 6. Adjust until the oscillator sounds perceptually flat across the range
-7. Enable **Level Match** before using **Bypass** — it automatically compensates the bypass path so both states are at equal perceived loudness, removing the "louder sounds better" bias
+7. Enable **Level Match** before using **Bypass** — it automatically compensates the bypass path so both states are at equal perceived loudness, removing the "louder sounds better" bias. The dB shown on the button is the offset you'd dial into a flat preset in other EQ software to match this profile's loudness
 8. Use **Bypass** to toggle the EQ in and out and confirm the correction is working
 9. Upload an audio file and use **Bypass** (with Level Match on) to hear the difference on real material
 10. **Export Profile** to save your settings as a `.txt` file
