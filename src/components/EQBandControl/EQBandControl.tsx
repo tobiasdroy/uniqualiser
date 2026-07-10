@@ -390,16 +390,6 @@ export function EQBandControl() {
               Level Match
             </button>
           </Tip>
-          <Tip label={bwMode ? 'Showing bandwidth in octaves — click for Q factor' : 'Showing Q factor — click for bandwidth in octaves'}>
-            <button
-              className={`${styles.levelBtn} ${bwMode ? styles.levelActive : ''}`}
-              onClick={() => setBwMode((v) => !v)}
-              aria-pressed={bwMode}
-              aria-label={bwMode ? 'BW mode: bandwidth in octaves — click for Q' : 'Q mode: Q factor — click for bandwidth in octaves'}
-            >
-              {bwMode ? 'BW' : 'Q'}
-            </button>
-          </Tip>
           <Tip label={eqBypassed ? 'Restore EQ' : 'Bypass EQ to compare flat response'}>
             <button
               className={`${styles.abBtn} ${eqBypassed ? styles.abActive : ''}`}
@@ -449,7 +439,16 @@ export function EQBandControl() {
 
       <div className={styles.bottomBar}>
         <p className={styles.hint} aria-live="polite">
-          {bands.length}/10 bands · Drag handles on the curve, or use arrow keys when a handle is focused
+          {bands.length}/10 bands · Drag handles on the curve, or use arrow keys when a handle is focused ·{' '}
+          <button
+            type="button"
+            className={styles.qModeLink}
+            onClick={() => setBwMode((v) => !v)}
+            aria-pressed={bwMode}
+            aria-label={bwMode ? 'Switch Q display to Q factor' : 'Switch Q display to bandwidth in octaves'}
+          >
+            {bwMode ? 'Switch to Q' : 'Switch to bandwidth'}
+          </button>
         </p>
         <Tip label={bands.length >= 10 ? 'Maximum 10 bands' : 'Add a new EQ band'}>
           <button

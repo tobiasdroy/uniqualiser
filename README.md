@@ -11,6 +11,7 @@ All processing is done client-side via the Web Audio API — no server, no data 
 - **Parametric EQ** — 5 bands by default, expandable to 10; Peak, Lo Shelf, and Hi Shelf filter types per band; preamp gain control (−20 to +6 dB); gain range ±18 dB matches the visible EQ curve
 - **Auto-preamp** — preamp is automatically reduced to compensate whenever a band boost would risk clipping
 - **Rotary knobs** — each band parameter (Freq, Gain, Q) has a drag knob alongside the number input; drag up to increase, down to decrease; Q knob hidden for shelf filters
+- **Q / bandwidth toggle** — a small text link below the band list switches every band's Q display between Q factor and bandwidth in octaves
 - **Live EQ curve** — SVG frequency response computed in real time; drag handles to adjust frequency and gain directly on the curve; hover a handle to see bandwidth shading and drag the Q edges
 - **Bidirectional hover** — hovering a curve node highlights the corresponding EQ band row, and hovering a band row highlights the corresponding node on the curve
 - **Bypass** — toggle the entire EQ in and out with one button to compare your correction against the flat signal; the curve and band controls desaturate when bypassed to make the state unmistakable

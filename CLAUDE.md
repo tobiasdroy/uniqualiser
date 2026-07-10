@@ -257,6 +257,8 @@ Bands: min 1, max 10. Add/remove buttons. Enable toggle per band (button labelle
 
 **Bidirectional hover** — `hoveredBandIndex` in `AppContext` is set by both `BandRow` (mouseenter/leave) and the EQCurve band group (mouseenter/leave). Whichever fires sets the shared index; the other direction reacts to it. `BandRow` applies `.highlighted` (accent tint + left accent bar) when its index matches.
 
+**Q / bandwidth display toggle** — `bwMode` is local state in `EQBandControl`. It's intentionally low-prominence (not a header button): a plain underlined text link — "Switch to bandwidth" / "Switch to Q" — in the bottom bar hint row, next to the band-count text. Toggling it converts every PK band's Q knob/input between Q factor and bandwidth in octaves via `qToBw`/`bwToQ` (exact conversion: `BW = 2/ln(2) · arcsinh(1/(2Q))`), passed down to `BandRow` as the `bwMode` prop. The underlying `band.q` value in state is always Q factor — `bwMode` only affects display and the knob/input range (`BW_MIN`/`BW_MAX` ≈ Q 10/0.1).
+
 ### Preamp row
 
 A single `Preamp [input] dB` row sits between the header and the band list. Range −20 to +6 dB, step 0.5. Uses the same `NumberInput` component as band parameters. Maps to `setPreampGain` in context → `engine.setMasterGain(Math.pow(10, gain/20))`. Saved to and loaded from APO profiles.
