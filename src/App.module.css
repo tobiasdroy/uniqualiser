@@ -52,12 +52,20 @@
 }
 
 .logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 32px;
   font-weight: var(--font-weight-medium);
   color: var(--text-primary);
   text-decoration: none;
   letter-spacing: -0.3px;
   flex: 1;
+}
+
+.logoIcon {
+  border-radius: 7px;
+  flex-shrink: 0;
 }
 
 .nav {
@@ -111,11 +119,128 @@
     0 32px 80px rgba(0, 0, 0, 0.07);
 }
 
+/* ── Intro hero (top split: heading/lead/chips + decorative curve) ──────── */
+
+.introHero {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 32px;
+  align-items: center;
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.introHeroText {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.introHeading {
+  font-size: 26px;
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+  line-height: 1.25;
+}
+
+.introChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.introChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+
+.introChip svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.heroVisual {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  aspect-ratio: 300 / 176;
+  background:
+    radial-gradient(circle at 22% 18%, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 60%),
+    radial-gradient(circle at 82% 82%, color-mix(in srgb, var(--accent-secondary) 14%, transparent) 0%, transparent 55%),
+    var(--bg-elevated);
+}
+
+.heroVisual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.heroVisualSvg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.heroGrid line {
+  stroke: var(--eq-grid);
+  stroke-width: 1;
+}
+
+.heroZeroLine {
+  stroke: var(--eq-zero-line);
+  stroke-width: 1.5;
+}
+
+.heroCurve {
+  fill: none;
+  stroke: var(--eq-curve);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.heroCurveGlow {
+  fill: none;
+  stroke: var(--eq-curve);
+  stroke-width: 8;
+  stroke-linecap: round;
+  opacity: 0.3;
+  filter: blur(6px);
+}
+
+.heroHandle {
+  fill: var(--bg-primary);
+  stroke: var(--eq-curve);
+  stroke-width: 2.5;
+}
+
+@media (max-width: 760px) {
+  .introHero {
+    grid-template-columns: 1fr;
+  }
+
+  .heroVisual {
+    aspect-ratio: 16 / 9;
+  }
+}
+
 .introLead {
   font-size: 15px;
   line-height: 1.6;
   color: var(--text-primary);
-  margin-bottom: 20px;
 }
 
 .introTitle {

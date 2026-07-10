@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import { motion } from 'framer-motion';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, Ear, Lock, Gauge } from 'lucide-react';
 import { AppProvider } from './context/AppContext';
 import { EQCurve } from './components/EQCurve/EQCurve';
 import { EQBandControl } from './components/EQBandControl/EQBandControl';
@@ -99,7 +99,10 @@ function Header({ onToggleTheme, theme }: { onToggleTheme: () => void; theme: st
   return (
     <>
       <header className={styles.header}>
-        <Link to="/" className={styles.logo}>Uniqualiser</Link>
+        <Link to="/" className={styles.logo}>
+          <img src="/eq-icon.svg" alt="" className={styles.logoIcon} width={28} height={28} />
+          Uniqualiser
+        </Link>
         <nav className={styles.nav} aria-label="Main navigation">
           <button
             className={styles.navButton}
@@ -131,15 +134,72 @@ const cardVariants = {
   visible: { opacity: 1, y: 0 },
 };
 
+function HeroVisual() {
+  const handles = [
+    { cx: 62, cy: 44 },
+    { cx: 170, cy: 152 },
+    { cx: 268, cy: 76 },
+  ];
+
+  return (
+    <div className={styles.heroVisual} aria-hidden="true">
+      <svg viewBox="0 0 340 200" className={styles.heroVisualSvg}>
+        <g className={styles.heroGrid}>
+          <line x1="0" y1="40" x2="340" y2="40" />
+          <line x1="0" y1="80" x2="340" y2="80" />
+          <line x1="0" y1="120" x2="340" y2="120" />
+          <line x1="0" y1="160" x2="340" y2="160" />
+          <line x1="56" y1="0" x2="56" y2="200" />
+          <line x1="112" y1="0" x2="112" y2="200" />
+          <line x1="168" y1="0" x2="168" y2="200" />
+          <line x1="224" y1="0" x2="224" y2="200" />
+          <line x1="280" y1="0" x2="280" y2="200" />
+        </g>
+        <line x1="0" y1="100" x2="340" y2="100" className={styles.heroZeroLine} />
+        <path
+          className={styles.heroCurveGlow}
+          d="M -10 90 C 20 90, 40 44, 62 44 C 90 44, 130 152, 170 152 C 210 152, 235 76, 268 76 C 295 76, 320 92, 350 90"
+        />
+        <path
+          className={styles.heroCurve}
+          d="M -10 90 C 20 90, 40 44, 62 44 C 90 44, 130 152, 170 152 C 210 152, 235 76, 268 76 C 295 76, 320 92, 350 90"
+        />
+        {handles.map((h, i) => (
+          <motion.circle
+            key={i}
+            cx={h.cx}
+            cy={h.cy}
+            r="6"
+            className={styles.heroHandle}
+            animate={{ cy: [h.cy, h.cy - 4, h.cy] }}
+            transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut', delay: i * 0.4 }}
+          />
+        ))}
+      </svg>
+    </div>
+  );
+}
+
 function IntroCard() {
   return (
     <section className={styles.introCard} aria-label="About Uniqualiser">
-      <p className={styles.introLead}>
-        Uniqualiser is a free, browser-based tool for building a personalised parametric EQ profile
-        for your headphones — tuned to your own hearing, not a generic manufacturer measurement. You
-        sweep a tone across the audible range to find the peaks and dips unique to your ears, correct
-        them with a parametric equaliser, then verify the result against your own music.
-      </p>
+      <div className={styles.introHero}>
+        <div className={styles.introHeroText}>
+          <h2 className={styles.introHeading}>Hear your headphones the way you actually hear them</h2>
+          <p className={styles.introLead}>
+            Uniqualiser is a free, browser-based tool for building a personalised parametric EQ profile
+            for your headphones — tuned to your own hearing, not a generic manufacturer measurement. You
+            sweep a tone across the audible range to find the peaks and dips unique to your ears, correct
+            them with a parametric equaliser, then verify the result against your own music.
+          </p>
+          <div className={styles.introChips}>
+            <span className={styles.introChip}><Ear size={13} strokeWidth={2.2} /> Tuned by ear, 20 Hz–20 kHz</span>
+            <span className={styles.introChip}><Lock size={13} strokeWidth={2.2} /> 100% private, runs in-browser</span>
+            <span className={styles.introChip}><Gauge size={13} strokeWidth={2.2} /> Free, no signup</span>
+          </div>
+        </div>
+        <HeroVisual />
+      </div>
       <h2 className={styles.introTitle}>Why personalise your EQ?</h2>
       <div className={styles.introColumns}>
         <div className={styles.introCol}>

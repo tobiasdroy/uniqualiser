@@ -37,6 +37,7 @@ Font: `'Helvetica Neue', Helvetica, Arial, sans-serif`, weight 500 everywhere.
 --text-primary: rgba(0,0,0,0.88)
 --text-secondary: rgba(0,0,0,0.58)   /* ≥4.5:1 on white — WCAG AA */
 --accent / --eq-curve: #b91c1c       /* deep red, ≥4.5:1 on white — WCAG AA */
+--accent-secondary: #d97706          /* warm amber, decorative gradients only — not contrast-checked */
 
 /* Dark */
 --bg-primary:  #1c1b1a
@@ -47,6 +48,7 @@ Font: `'Helvetica Neue', Helvetica, Arial, sans-serif`, weight 500 everywhere.
 --text-primary: rgba(255,255,255,0.92)
 --text-secondary: rgba(255,255,255,0.55)  /* ≥4.5:1 on #2c2b2a — WCAG AA */
 --accent / --eq-curve: #ff6060            /* lighter red, ≥4.5:1 on all dark surfaces */
+--accent-secondary: #fbbf24                /* warm amber, decorative gradients only — not contrast-checked */
 ```
 
 **Shadows** — three-layer diffuse shadow for depth; dark mode uses a heavier version:
@@ -104,7 +106,7 @@ src/
 ### Header
 
 Sticky, blurred, `z-index: 100`. Contains:
-- **Logo** — "Uniqualiser" (32 px, links to `/`)
+- **Logo** — `public/eq-icon.svg` (28 px) + "Uniqualiser" wordmark (32 px), links to `/`
 - **Nav** — "How to use" button (opens `InstructionsModal`). The Wizard link is intentionally hidden until the feature ships.
 - **Header right** — Dark/Light theme toggle + `ProfileManager` (import/export)
 
@@ -114,7 +116,11 @@ Opened from the "How to use" nav button. Focus-trapped; Escape closes it. Four n
 
 ### IntroCard
 
-First card in `MainLayout` (above `OscillatorControl`). Two-column layout on desktop (single column ≤760 px). Explains why AutoEQ alone is insufficient (HRTF variation) and the recommended workflow (AutoEQ for sub-1 kHz, Uniqualiser for above). Includes a link to The Headphone Show YouTube video. Uses the same card styling as all other cards (hover lift, `card-bg`, `border-radius: 20px`).
+First card in `MainLayout` (above `OscillatorControl`). Uses the same card styling as all other cards (hover lift, `card-bg`, `border-radius: 20px`).
+
+Opens with a **hero split** (`introHero`, grid `1fr 300px`, single column ≤760 px) so the intro isn't one unbroken block of text: left is a heading + lead paragraph + three feature chips (`Ear`/`Lock`/`Gauge` icons from lucide-react — "Tuned by ear", "100% private", "Free, no signup"); right is `HeroVisual`, a decorative SVG echoing the real EQ curve (grid, glow, curve path, three handle dots that idly float via `framer-motion`). Purely decorative (`aria-hidden`), not the live EQ curve. A `border-bottom` separates the hero from the "Why personalise your EQ?" two-column section below it, which explains why AutoEQ alone is insufficient (HRTF variation) and the recommended workflow (AutoEQ for sub-1 kHz, Uniqualiser for above), and includes a link to The Headphone Show YouTube video.
+
+The hero visual's background and the page-level `html/body` background both layer a subtle SVG `feTurbulence` grain texture (via `background-image`/`::after`, `mix-blend-mode: overlay`, ~5-6% opacity) plus radial gradients built from `--accent` and the new `--accent-secondary` (warm amber — `#d97706` light / `#fbbf24` dark) using `color-mix()`, so both stay theme-correct automatically. `--accent-secondary` is decorative only — never used for text, buttons, or focus states.
 
 ---
 
