@@ -145,30 +145,6 @@
   line-height: 1.25;
 }
 
-.introChips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 2px;
-}
-
-.introChip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: var(--font-weight-medium);
-  color: var(--text-secondary);
-  background: var(--bg-elevated);
-  border-radius: 999px;
-  padding: 6px 12px;
-}
-
-.introChip svg {
-  color: var(--accent);
-  flex-shrink: 0;
-}
-
 .heroVisual {
   position: relative;
   border-radius: 16px;

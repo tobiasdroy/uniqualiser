@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import { motion } from 'framer-motion';
-import { Sun, Moon, Ear, Lock, Gauge } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 import { AppProvider } from './context/AppContext';
 import { EQCurve } from './components/EQCurve/EQCurve';
 import { EQBandControl } from './components/EQBandControl/EQBandControl';
@@ -185,18 +185,13 @@ function IntroCard() {
     <section className={styles.introCard} aria-label="About Uniqualiser">
       <div className={styles.introHero}>
         <div className={styles.introHeroText}>
-          <h2 className={styles.introHeading}>Hear your headphones the way you actually hear them</h2>
+          <h2 className={styles.introHeading}>Everyone's ears are a little different. Here's how to tune for yours.</h2>
           <p className={styles.introLead}>
             Uniqualiser is a free, browser-based tool for building a personalised parametric EQ profile
             for your headphones — tuned to your own hearing, not a generic manufacturer measurement. You
             sweep a tone across the audible range to find the peaks and dips unique to your ears, correct
             them with a parametric equaliser, then verify the result against your own music.
           </p>
-          <div className={styles.introChips}>
-            <span className={styles.introChip}><Ear size={13} strokeWidth={2.2} /> Tuned by ear, 20 Hz–20 kHz</span>
-            <span className={styles.introChip}><Lock size={13} strokeWidth={2.2} /> 100% private, runs in-browser</span>
-            <span className={styles.introChip}><Gauge size={13} strokeWidth={2.2} /> Free, no signup</span>
-          </div>
         </div>
         <HeroVisual />
       </div>
