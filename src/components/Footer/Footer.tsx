@@ -32,23 +32,42 @@ function PrivacyModal({ onClose }: { onClose: () => void }) {
           </section>
 
           <section>
+            <h3 className={styles.privacySectionHeading}>Site analytics</h3>
+            <p>
+              We use Cloudflare Web Analytics to see aggregate traffic to this site — for example,
+              visit counts, referring sites, and country of origin. It is cookieless, sets no
+              persistent identifier, and cannot track you across other websites. It is entirely
+              separate from the hearing calibration tool: no EQ profile, audio file, or hearing
+              data is ever included. Cloudflare processes standard web request metadata (such as
+              IP address, at the point of request) as our data processor, solely to produce
+              anonymised, aggregated traffic statistics.
+            </p>
+          </section>
+
+          <section>
             <h3 className={styles.privacySectionHeading}>UK GDPR &amp; DUAA compliance</h3>
             <p>
-              Because this application processes no personal data on any server and sets no
-              tracking cookies, it falls outside the scope of UK GDPR data-controller obligations
-              and the consent requirements of the UK Data Use and Access Act (DUAA) for
-              non-essential storage. No consent banner is required or shown.
+              This application sets no tracking or cross-site cookies, and Cloudflare Web
+              Analytics (see above) is cookieless and uses no persistent identifier — so no
+              consent banner is required under the UK Data Use and Access Act (DUAA)'s rules for
+              non-essential storage. Our use of anonymised, aggregate traffic data relies on
+              legitimate interest under UK GDPR Article 6(1)(f), necessary to understand and
+              maintain the service. No hearing or health data ever reaches a server, so no further
+              UK GDPR processing obligations arise from the calibration tool itself.
             </p>
           </section>
 
           <section>
             <h3 className={styles.privacySectionHeading}>EU GDPR compliance</h3>
             <p>
-              No personal data is collected, transmitted, or processed by this application on any
-              server. Hearing calibration data and audio files remain entirely within your browser
-              and are not accessible to the operator or any third party. Accordingly, no legal
-              basis for processing under EU GDPR Article 6 or Article 9 (special category health
-              data) is required, as no such processing takes place.
+              Hearing calibration data and audio files remain entirely within your browser and are
+              never transmitted to, or accessible by, the operator or any third party —
+              accordingly no legal basis under EU GDPR Article 9 (special category health data) is
+              required, as no such processing takes place. Separately, this site uses Cloudflare
+              Web Analytics to process minimal technical data (e.g. IP address, at the point of
+              request) for anonymised, aggregate traffic reporting. This limited processing does
+              not identify individuals and relies on legitimate interest under EU GDPR Article
+              6(1)(f).
             </p>
           </section>
 
@@ -57,10 +76,12 @@ function PrivacyModal({ onClose }: { onClose: () => void }) {
             <p>
               This application does not collect, sell, or share consumer health data as defined
               under Washington State's My Health My Data Act (MHMDA) or equivalent state laws.
-              All hearing-related data is processed locally on your device and never transmitted
-              to any server, third party, or analytics service. No health data is retained beyond
-              your current browser session unless you explicitly export a profile file to your own
-              device.
+              All hearing-related data is processed locally on your device and is never
+              transmitted to any server, third party, or analytics service — this remains true
+              even though the site uses Cloudflare Web Analytics for anonymous traffic statistics,
+              since no hearing or health data of any kind is included in that data. No health data
+              is retained beyond your current browser session unless you explicitly export a
+              profile file to your own device.
             </p>
           </section>
 
@@ -116,7 +137,8 @@ export function Footer() {
     <>
       <footer className={styles.footer}>
         <p className={styles.notice}>
-          All audio processing happens locally on your device. No data is uploaded or shared.
+          All audio processing happens locally on your device and is never uploaded or shared.
+          This site uses cookie-free analytics to measure visits — see our Privacy Policy for details.
         </p>
         <div className={styles.links}>
           <a

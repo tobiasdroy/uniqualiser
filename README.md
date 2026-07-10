@@ -26,7 +26,7 @@ A safety notice is shown on every visit before any audio can play. Hardware limi
 
 ## Privacy
 
-All audio and hearing data is processed entirely within your browser. Nothing is transmitted to any server. See the in-app Privacy Policy for full compliance details (UK GDPR, EU GDPR, US MHMDA, COPPA, EU AI Act).
+All audio and hearing data is processed entirely within your browser and is never transmitted to any server. The site uses cookieless Cloudflare Web Analytics for aggregate visitor stats (page views, referrers, country) — entirely separate from your calibration data. See the in-app Privacy Policy for full compliance details (UK GDPR, EU GDPR, US MHMDA, COPPA, EU AI Act).
 
 ## Tech stack
 

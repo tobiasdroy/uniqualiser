@@ -306,7 +306,7 @@ The modal has a focus trap. Content is friendly and concise (~80 words): intro, 
 
 ### Privacy Policy
 
-Local-only processing. No data leaves the browser. One-line notice in the footer. The **Privacy Policy** modal (opened via footer link) documents compliance with UK GDPR / DUAA, EU GDPR (Article 6 & 9), US state health privacy laws (Washington MHMDA), COPPA, and the EU AI Act. The modal heading and footer button are both labelled "Privacy Policy".
+Hearing/audio data is local-only and never leaves the browser. The site itself uses **Cloudflare Web Analytics** (cookieless, no persistent identifier, hosted via the Cloudflare dashboard — no client-side beacon script is added in code) for aggregate visitor stats; this is disclosed in the modal and is entirely separate from the calibration data. One-line notice in the footer. The **Privacy Policy** modal (opened via footer link) documents compliance with UK GDPR / DUAA, EU GDPR (Article 6 & 9), US state health privacy laws (Washington MHMDA), COPPA, and the EU AI Act, including a dedicated "Site analytics" section covering the Cloudflare Web Analytics disclosure. The modal heading and footer button are both labelled "Privacy Policy".
 
 The footer also contains a **Feedback** link (`mailto:tobias.droy@gmail.com?subject=Uniqualiser%20feedback`) for bug reports and feature suggestions.
 
