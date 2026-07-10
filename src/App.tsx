@@ -134,6 +134,12 @@ const cardVariants = {
 function IntroCard() {
   return (
     <section className={styles.introCard} aria-label="About Uniqualiser">
+      <p className={styles.introLead}>
+        Uniqualiser is a free, browser-based tool for building a personalised parametric EQ profile
+        for your headphones — tuned to your own hearing, not a generic manufacturer measurement. You
+        sweep a tone across the audible range to find the peaks and dips unique to your ears, correct
+        them with a parametric equaliser, then verify the result against your own music.
+      </p>
       <h2 className={styles.introTitle}>Why personalise your EQ?</h2>
       <div className={styles.introColumns}>
         <div className={styles.introCol}>
@@ -168,6 +174,9 @@ function IntroCard() {
 function MainLayout() {
   return (
     <main className={styles.main} id="main-content">
+      <h1 className={styles.srOnly}>
+        Uniqualiser — Personalised Headphone EQ Profiler Based on Your Own Hearing
+      </h1>
       <motion.div variants={cardVariants} initial="hidden" animate="visible" transition={{ duration: 0.2, ease: 'easeOut', delay: 0 }}>
         <IntroCard />
       </motion.div>

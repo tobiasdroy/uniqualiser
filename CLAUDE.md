@@ -323,6 +323,14 @@ The footer also contains a **Feedback** link (`mailto:tobias.droy@gmail.com?subj
 - Safety modal focus trap.
 - Under-18 restriction documented in safety modal (UK Children's Code / Age Appropriate Design Code).
 
+### SEO
+
+- `index.html` head: descriptive `<title>`, `<meta name="description">`, canonical link (`https://uniqualiser.com/`), Open Graph + Twitter meta tags, and a `WebApplication` JSON-LD block describing what the app actually does (personalised EQ profiling by ear, not just "plays sine tones") — added so search/AI-overview crawlers summarise it correctly.
+- `App.tsx` has a visually-hidden `<h1>` (`.srOnly` in `App.module.css`) as the first element in `<main>` — the visible header uses a plain `<Link>` logo, not a heading, so this is the page's only `<h1>`.
+- `IntroCard` opens with a visible one-paragraph plain-language definition (`.introLead`) above the "Why personalise your EQ?" section, so both users and crawlers get the core value prop before the HRTF explanation.
+- `public/robots.txt` and `public/sitemap.xml` — `/wizard` is disallowed and excluded from the sitemap since it's an unlinked stub route.
+- `public/eq-icon.svg` — placeholder favicon (accent-blue rounded square, white EQ curve). Swap for a real logo when one exists; no `og:image`/`twitter:image` is set yet since a square favicon isn't the right shape for social link previews (want ~1200×630).
+
 ---
 
 ## Known gotchas

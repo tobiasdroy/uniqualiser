@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /wizard
+
+Sitemap: https://uniqualiser.com/sitemap.xml

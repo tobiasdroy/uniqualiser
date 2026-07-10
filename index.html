@@ -4,7 +4,56 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/eq-icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Uniqualiser</title>
+    <title>Uniqualiser — Personalised Headphone EQ Profiles</title>
+    <meta
+      name="description"
+      content="Build a personalised parametric EQ profile for your headphones, tuned to your own hearing — not a generic measurement curve. Free, private, and runs entirely in your browser."
+    />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://uniqualiser.com/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Uniqualiser" />
+    <meta property="og:title" content="Uniqualiser — Personalised Headphone EQ Profiles" />
+    <meta
+      property="og:description"
+      content="Build a personalised parametric EQ profile for your headphones, tuned to your own hearing — not a generic measurement curve. Free, private, and runs entirely in your browser."
+    />
+    <meta property="og:url" content="https://uniqualiser.com/" />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Uniqualiser — Personalised Headphone EQ Profiles" />
+    <meta
+      name="twitter:description"
+      content="Build a personalised parametric EQ profile for your headphones, tuned to your own hearing — not a generic measurement curve. Free, private, and runs entirely in your browser."
+    />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Uniqualiser",
+        "url": "https://uniqualiser.com/",
+        "description": "Uniqualiser is a free, browser-based tool for building a personalised parametric EQ profile for your headphones. Instead of applying a generic, manufacturer-measured correction curve, you sweep a tone across the audible range, identify the peaks and dips in your own hearing, and correct them by ear — accounting for individual HRTF (head-related transfer function) variation that generic EQ profiles miss.",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Any (runs in a web browser)",
+        "browserRequirements": "Requires JavaScript and the Web Audio API",
+        "isAccessibleForFree": true,
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "featureList": [
+          "Sine oscillator sweep from 20 Hz to 20 kHz to locate peaks and troughs in your own hearing",
+          "Parametric EQ with Peak, Low Shelf, and High Shelf bands",
+          "Real-time EQ frequency response curve you can drag to adjust",
+          "A/B bypass comparison with level matching to verify the correction",
+          "Import and export in the standard APO Equalizer format",
+          "Verify your profile by playing your own audio files through it"
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
