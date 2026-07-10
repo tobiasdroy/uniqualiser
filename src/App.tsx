@@ -185,12 +185,12 @@ function IntroCard() {
     <section className={styles.introCard} aria-label="About Uniqualiser">
       <div className={styles.introHero}>
         <div className={styles.introHeroText}>
-          <h2 className={styles.introHeading}>Everyone's ears are a little different. Here's how to tune for yours.</h2>
+          <h2 className={styles.introHeading}>Everyone's ears are different. Let's tune for yours.</h2>
           <p className={styles.introLead}>
             Uniqualiser is a free, browser-based tool for building a personalised parametric EQ profile
-            for your headphones — tuned to your own hearing, not a generic manufacturer measurement. You
+            for your headphones — tuned to your hearing, not a measurement rig. You
             sweep a tone across the audible range to find the peaks and dips unique to your ears, correct
-            them with a parametric equaliser, then verify the result against your own music.
+            them with a parametric equaliser, then verify the result using your own music.
           </p>
         </div>
         <HeroVisual />
