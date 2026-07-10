@@ -30,23 +30,23 @@ Font: `'Helvetica Neue', Helvetica, Arial, sans-serif`, weight 500 everywhere.
 ```css
 /* Light */
 --bg-primary:  #ffffff        /* thumb borders, input backgrounds */
---bg-secondary: #f5f5f7       /* page background (grey) + internal card surfaces */
---bg-elevated: #f5f5f7        /* band rows, drop zones, slider tracks (grey on white cards) */
---page-bg:     #f5f5f7        /* html/body background — grey so white cards lift off the page */
---card-bg:     linear-gradient(150deg, #ffffff 0%, #fdfdfd 100%)  /* white cards */
+--bg-secondary: #f5f4f2       /* page background (warm grey) + internal card surfaces */
+--bg-elevated: #f5f4f2        /* band rows, drop zones, slider tracks (grey on white cards) */
+--page-bg:     #f5f4f2        /* html/body background — grey so white cards lift off the page */
+--card-bg:     linear-gradient(150deg, #ffffff 0%, #fdfcfa 100%)  /* white cards */
 --text-primary: rgba(0,0,0,0.88)
 --text-secondary: rgba(0,0,0,0.58)   /* ≥4.5:1 on white — WCAG AA */
---accent / --eq-curve: #0062cc       /* ≥4.5:1 on white — WCAG AA */
+--accent / --eq-curve: #b91c1c       /* deep red, ≥4.5:1 on white — WCAG AA */
 
 /* Dark */
---bg-primary:  #1c1c1e
---bg-secondary: #2c2c2e
---bg-elevated: #3a3a3c
---page-bg:     #1c1c1e        /* darkest — cards lift above it */
---card-bg:     linear-gradient(150deg, #3a3a3c 0%, #323234 100%)  /* lighter than page */
+--bg-primary:  #1c1b1a
+--bg-secondary: #2c2b2a
+--bg-elevated: #3a3938
+--page-bg:     #1c1b1a        /* darkest — cards lift above it */
+--card-bg:     linear-gradient(150deg, #3a3938 0%, #312f2e 100%)  /* lighter than page */
 --text-primary: rgba(255,255,255,0.92)
---text-secondary: rgba(255,255,255,0.55)  /* ≥4.5:1 on #2c2c2e — WCAG AA */
---accent / --eq-curve: #5aabff            /* ≥4.5:1 on all dark surfaces */
+--text-secondary: rgba(255,255,255,0.55)  /* ≥4.5:1 on #2c2b2a — WCAG AA */
+--accent / --eq-curve: #ff6060            /* lighter red, ≥4.5:1 on all dark surfaces */
 ```
 
 **Shadows** — three-layer diffuse shadow for depth; dark mode uses a heavier version:
@@ -59,7 +59,7 @@ Font: `'Helvetica Neue', Helvetica, Arial, sans-serif`, weight 500 everywhere.
 
 **Cards** — `border-radius: 20px`; `transition: transform + box-shadow 0.22s`; hover lifts `translateY(-3px)` with a deeper shadow. Card section titles are `24px` title case, `--text-primary` (not secondary), no `text-transform` or `letter-spacing`.
 
-The page background has a subtle radial blue accent at the top (`radial-gradient` on `html/body background-image`).
+The page background has a subtle radial red accent at the top (`radial-gradient` on `html/body background-image`).
 
 Cards are differentiated by background colour only — no border outlines.
 
@@ -329,7 +329,8 @@ The footer also contains a **Feedback** link (`mailto:tobias.droy@gmail.com?subj
 - `App.tsx` has a visually-hidden `<h1>` (`.srOnly` in `App.module.css`) as the first element in `<main>` — the visible header uses a plain `<Link>` logo, not a heading, so this is the page's only `<h1>`.
 - `IntroCard` opens with a visible one-paragraph plain-language definition (`.introLead`) above the "Why personalise your EQ?" section, so both users and crawlers get the core value prop before the HRTF explanation.
 - `public/robots.txt` and `public/sitemap.xml` — `/wizard` is disallowed and excluded from the sitemap since it's an unlinked stub route.
-- `public/eq-icon.svg` — placeholder favicon (accent-blue rounded square, white EQ curve). Swap for a real logo when one exists; no `og:image`/`twitter:image` is set yet since a square favicon isn't the right shape for social link previews (want ~1200×630).
+- `public/eq-icon.svg` — placeholder favicon (deep-red rounded square, white EQ curve, matching `--accent`). Swap for a real logo when one exists.
+- `public/og-image.png` (1200×630) — social link-preview card, built to match the actual card/EQ-curve visual language (white card, warm-grey page background, red curve with glow + handle dots). Referenced by `og:image`/`twitter:image` in `index.html`. Regenerate by rendering an HTML mockup with Playwright at 1200×630 if the design changes — there's no build-time image generation step.
 
 ---
 
