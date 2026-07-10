@@ -138,7 +138,6 @@ export function Footer() {
       <footer className={styles.footer}>
         <p className={styles.notice}>
           All audio processing happens locally on your device and is never uploaded or shared.
-          This site uses cookie-free analytics to measure visits — see our Privacy Policy for details.
         </p>
         <div className={styles.links}>
           <a
